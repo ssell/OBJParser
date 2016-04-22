@@ -17,7 +17,7 @@
 #ifndef __H__OBJ_PARSER_STATE__H__
 #define __H__OBJ_PARSER_STATE__H__
 
-#include "OBJStructs.hpp"
+#include "OBJGroup.hpp"
 #include <unordered_map>
 
 //------------------------------------------------------------------------------------------
@@ -47,12 +47,13 @@ public:
     void addVertexTexture(OBJVector2 const& vector);
     void addVertexNormal(OBJVector3 const& vector);
     
-    void addFace(OBJFaceIndex const& i0, OBJFaceIndex const& i1, OBJFaceIndex const& i2);
-    void addFace(OBJFaceIndex const& i0, OBJFaceIndex const& i1, OBJFaceIndex const& i2, OBJFaceIndex const& i3);
+    void addFace(OBJFace face);
+    void addLine(OBJLine& line);
+    void addPointCollection(OBJPoint& points);
 
 protected:
 
-    OBJFaceIndex transformIndex(OBJFaceIndex const& source) const;
+    void transformVertexGroup(OBJVertexGroup& source) const;
 
     //--------------------------------------------------------------------
 

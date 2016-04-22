@@ -25,16 +25,30 @@
 
 //------------------------------------------------------------------------------------------
 
+/**
+ * \struct OBJVector2
+ * \brief Simple two-component vector struct
+ */
 struct OBJVector2
 {
+    OBJVector2() : x(0.0f), y(0.0f) { }
+
     float x;
     float y;
 };
 
 BOOST_FUSION_ADAPT_STRUCT(OBJVector2, (float, x), (float, y))
 
+//------------------------------------------------------------------------------------------
+
+/**
+ * \struct OBJVector3
+ * \brief Simple three-component vector struct
+ */
 struct OBJVector3
 {
+    OBJVector3() : x(0.0f), y(0.0f), z(0.0f) { }
+
     float x;
     float y;
     float z;
@@ -42,21 +56,84 @@ struct OBJVector3
 
 BOOST_FUSION_ADAPT_STRUCT(OBJVector3, (float, x), (float, y), (float, z))
 
-struct OBJFaceIndex
-{
-    uint32_t indexSpatial;
-    uint32_t indexTexture;
-    uint32_t indexNormal;
+//------------------------------------------------------------------------------------------
+
+/**
+ * \struct OBJVertexGroup
+ * \brief Index pairing comprising a single vertex of a face.
+ *
+ * Raw OBJ vertex indices are 1-based and that is maintained inside of this struct.
+ *
+ * An index with value 0 indicates that the index is unspecified and thus unused.
+ * If the spatial index is 0, then the entire grouping is unused. This may occur
+ * if face data is provided as triangles and thus the fourth group in the OBJFace
+ * struct is not needed.
+ *
+ * OBJ vertex indices may also be negative, but all indices in this struct have
+ * been transformed and are positive.
+ */
+struct OBJVertexGroup
+{ 
+    OBJVertexGroup() : indexSpatial(0), indexTexture(0), indexNormal(0) { }
+
+    int32_t indexSpatial;
+    int32_t indexTexture;
+    int32_t indexNormal;
 };
 
-BOOST_FUSION_ADAPT_STRUCT(OBJFaceIndex, (uint32_t, indexSpatial), (uint32_t, indexTexture), (uint32_t, indexNormal))
+BOOST_FUSION_ADAPT_STRUCT(OBJVertexGroup, (int32_t, indexSpatial), (int32_t, indexTexture), (int32_t, indexNormal))
 
-struct OBJGroup
+//------------------------------------------------------------------------------------------
+
+/**
+ * \struct OBJFace
+ * \brief Collection of vertex groups comprising a single face.
+ *
+ * A face may represent one of the following:
+ *
+ *    - Triangle
+ *    - Quad
+ *
+ * You can check what is represented by seeing which vertex groups are in use.
+ * A vertex group is in use if it's indexSpatial element is not 0.
+ * 
+ * If all groups are in use, then the face is a quad. <br/>
+ * If group3 is not in use, then the face is a triangle.
+ */
+struct OBJFace
 {
-    std::string name;
-    std::vector<OBJFaceIndex> indices; 
+    OBJVertexGroup group0;
+    OBJVertexGroup group1;
+    OBJVertexGroup group2;
+    OBJVertexGroup group3;
+};
 
-    bool active;
+BOOST_FUSION_ADAPT_STRUCT(OBJFace, (OBJVertexGroup, group0), (OBJVertexGroup, group1), (OBJVertexGroup, group2), (OBJVertexGroup, group3))
+
+//------------------------------------------------------------------------------------------
+
+/**
+ * \struct OBJLine
+ * \brief Collection of vertex groups comprising a line.
+ *
+ * A line may have a variable number of segments, but will always have a minimum of two.
+ */
+struct OBJLine
+{
+    std::vector<OBJVertexGroup> segments;
+};
+
+//------------------------------------------------------------------------------------------
+
+/**
+ * \struct OBJPoint
+ * \brief Collection of vertex groups comprising a point collection.
+ *
+ * A point collection may have a variable number of points, but will always have a minimum of one.
+ */
+struct OBJPoint
+{
+    std::vector<OBJVertexGroup> points;
 };
 
 //------------------------------------------------------------------------------------------

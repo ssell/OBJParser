@@ -69,9 +69,11 @@
     <ClCompile Include="..\..\src\OBJGrammar.cpp" />
     <ClCompile Include="..\..\src\OBJParser.cpp" />
     <ClCompile Include="..\..\src\OBJState.cpp" />
+    <ClCompile Include="..\..\src\OBJGroup.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\OBJGrammar.hpp" />
+    <ClInclude Include="..\..\include\OBJGroup.hpp" />
     <ClInclude Include="..\..\include\OBJParser.hpp" />
     <ClInclude Include="..\..\include\OBJState.hpp" />
     <ClInclude Include="..\..\include\OBJStructs.hpp" />

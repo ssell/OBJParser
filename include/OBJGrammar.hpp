@@ -74,7 +74,7 @@ public:
           m_pOBJState(state)
     {
         //----------------------------------------------------------------
-        // Group Grammar
+        // Group Rule
         //----------------------------------------------------------------
 
         ruleGroupName = *(qi::char_ - ascii::space);
@@ -84,14 +84,14 @@ public:
             qi::eol;
         
         //----------------------------------------------------------------
-        // Data Grammar
+        // Data Rule
         //----------------------------------------------------------------
 
         ruleVector2Data = qi::skip(qi::blank)[qi::float_ >> qi::float_];
         ruleVector3Data = qi::skip(qi::blank)[qi::float_ >> qi::float_ >> qi::float_];
-        
+
         //----------------------------------------------------------------
-        // Vertex Grammar
+        // Vertex Rule
         //----------------------------------------------------------------
 
         ruleVertexSpatial = 
@@ -110,14 +110,37 @@ public:
             qi::eol;
         
         //----------------------------------------------------------------
-        // Face Grammar
+        // Face Rule
+        //----------------------------------------------------------------
+
+        // parse an integer or, if none is found, default to 0
+        ruleIndexValue = qi::int_ | qi::attr(0);
+
+        // parse an index integer, then optionally parse a / followed by an optional index, and then optionally parse a / followed by an optional index
+        ruleVertexGroupData = ruleIndexValue >> -qi::omit[qi::char_('/')] >> ruleIndexValue >> -qi::omit[qi::char_('/')] >> ruleIndexValue;
+        
+        // parse mandatory three vertex groups, followed by an optional fourth
+        ruleFaceData = ruleVertexGroupData >> qi::omit[qi::blank] >> ruleVertexGroupData >> qi::omit[qi::blank] >> ruleVertexGroupData >> -qi::omit[qi::blank] >> -(ruleVertexGroupData);
+
+        // parses triangle and quad faces
+        ruleFace =
+            qi::lit("f ") >>
+            ruleFaceData [boost::phoenix::bind(&OBJState::addFace, m_pOBJState, qi::_1)] >>
+            qi::eol;
+
+        //----------------------------------------------------------------
+        // Line Rule
+        //----------------------------------------------------------------
+
+        //----------------------------------------------------------------
+        // Point Rule
         //----------------------------------------------------------------
         
         //----------------------------------------------------------------
-        // Start Grammar
+        // Start Rule
         //----------------------------------------------------------------
 
-        ruleStart = +(ruleGroup | ruleVertexSpatial | ruleVertexTexture | ruleVertexNormal);
+        ruleStart = +(ruleGroup | ruleVertexSpatial | ruleVertexTexture | ruleVertexNormal | ruleFace);
     }
 
     //--------------------------------------------------------------------
@@ -128,12 +151,22 @@ public:
     qi::rule<Iterator, Skipper> ruleGroup;
     qi::rule<Iterator, std::string(), Skipper> ruleGroupName;
     
-    qi::rule<Iterator, OBJVector2(), Skipper> ruleVector2Data;
-    qi::rule<Iterator, OBJVector3(), Skipper> ruleVector3Data;
-    
+    qi::rule<Iterator, OBJVector2(), Skipper> ruleVector2Data;            ///< Parses "#.# #.#" of vertex point declarations (vt)
+    qi::rule<Iterator, OBJVector3(), Skipper> ruleVector3Data;            ///< Parses "#.# #.# #.#" of vertex point declarations (v, vn, etc.)
+    qi::rule<Iterator, OBJVertexGroup(), Skipper> ruleVertexGroupData;    ///< Parses "#/#/#" of vertex group declarations. Secondary elements (and their slashes) are optional.
+
+    qi::rule<Iterator, int32_t(), Skipper> ruleIndexValue;
+    qi::rule<Iterator, OBJFace(), Skipper> ruleFaceData;
+    qi::rule<Iterator, OBJFace(), Skipper> ruleLineData;
+    qi::rule<Iterator, OBJFace(), Skipper> rulePointData;
+
     qi::rule<Iterator, Skipper> ruleVertexSpatial;
     qi::rule<Iterator, Skipper> ruleVertexTexture;
     qi::rule<Iterator, Skipper> ruleVertexNormal;
+
+    qi::rule<Iterator, Skipper> ruleFace;
+    qi::rule<Iterator, Skipper> ruleLine;
+    qi::rule<Iterator, Skipper> rulePoint;
 
 protected:
 

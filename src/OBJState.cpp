@@ -79,7 +79,7 @@ void OBJState::addActiveGroup(std::string const& name)
     {
         m_GroupMap[name] = OBJGroup();
         groupPtr = &(*m_GroupMap.find(name)).second;
-        groupPtr->indices.reserve(m_GroupIndicesReservedSize);
+        groupPtr->faces.reserve(m_GroupIndicesReservedSize);
     }
 
     if(groupPtr)
@@ -104,40 +104,42 @@ void OBJState::addVertexNormal(OBJVector3 const& vector)
     m_VertexNormalData.emplace_back(vector);
 }
 
-void OBJState::addFace(OBJFaceIndex const& i0, OBJFaceIndex const& i1, OBJFaceIndex const& i2)
+void OBJState::addFace(OBJFace face)
 {
-    const OBJFaceIndex transformed0 = transformIndex(i0);
-    const OBJFaceIndex transformed1 = transformIndex(i1);
-    const OBJFaceIndex transformed2 = transformIndex(i2);
-    
+    transformVertexGroup(face.group0);
+    transformVertexGroup(face.group1);
+    transformVertexGroup(face.group2);
+    transformVertexGroup(face.group3);
+
     for(auto iter = m_ActiveGroups.begin(); iter != m_ActiveGroups.end(); ++iter)
     {
-        // Add triangle face to group
-
-        (*iter)->indices.emplace_back(transformed0);
-        (*iter)->indices.emplace_back(transformed1);
-        (*iter)->indices.emplace_back(transformed2);
+        (*iter)->faces.emplace_back(face);
     }
 }
 
-void OBJState::addFace(OBJFaceIndex const& i0, OBJFaceIndex const& i1, OBJFaceIndex const& i2, OBJFaceIndex const& i3)
+void OBJState::addLine(OBJLine& line)
 {
-    const OBJFaceIndex transformed0 = transformIndex(i0);
-    const OBJFaceIndex transformed1 = transformIndex(i1);
-    const OBJFaceIndex transformed2 = transformIndex(i2);
-    const OBJFaceIndex transformed3 = transformIndex(i3);
+    for(auto iter = line.segments.begin(); iter != line.segments.end(); ++iter)
+    {
+        transformVertexGroup((*iter));
+    }
 
     for(auto iter = m_ActiveGroups.begin(); iter != m_ActiveGroups.end(); ++iter)
     {
-        // Convert quad face to two triangles and add to group
+        (*iter)->addLine(line);
+    }
+}
 
-        (*iter)->indices.emplace_back(transformed0);
-        (*iter)->indices.emplace_back(transformed1);
-        (*iter)->indices.emplace_back(transformed2);
+void OBJState::addPointCollection(OBJPoint& points)
+{
+    for(auto iter = points.points.begin(); iter != points.points.end(); ++iter)
+    {
+        transformVertexGroup((*iter));
+    }
 
-        (*iter)->indices.emplace_back(transformed2);
-        (*iter)->indices.emplace_back(transformed3);
-        (*iter)->indices.emplace_back(transformed0);
+    for(auto iter = m_ActiveGroups.begin(); iter != m_ActiveGroups.end(); ++iter)
+    {
+        (*iter)->addPointCollection(points);
     }
 }
 
@@ -145,41 +147,25 @@ void OBJState::addFace(OBJFaceIndex const& i0, OBJFaceIndex const& i1, OBJFaceIn
 // Protected Methods
 //------------------------------------------------------------------------------------------
 
-OBJFaceIndex OBJState::transformIndex(OBJFaceIndex const& source) const
+void OBJState::transformVertexGroup(OBJVertexGroup& source) const
 {
-    // Incoming indices are 1-based AND may be negative.
-    // We want to transform them so they appropriately match our data containers (0-based positive)
+    // Incoming indices may be negative.
+    // We want to transform them so they are positive.
 
-    OBJFaceIndex result = source;
-
-    if(result.indexSpatial < 0)
+    if(source.indexSpatial < 0)
     {
-        result.indexSpatial += static_cast<uint32_t>(m_VertexSpatialData.size());
-    }
-    else
-    {
-        result.indexSpatial--; // 0-base
+        source.indexSpatial += static_cast<int32_t>(m_VertexSpatialData.size()) + 1;  // +1 to maintain index 1-base
     }
 
-    if(result.indexTexture < 0)
+    if(source.indexTexture < 0)
     {
-        result.indexTexture += static_cast<uint32_t>(m_VertexTextureData.size());
-    }
-    else
-    {
-        result.indexTexture--; // 0-base
+        source.indexTexture += static_cast<int32_t>(m_VertexTextureData.size()) + 1;  // +1 to maintain index 1-base
     }
 
-    if(result.indexNormal < 0)
+    if(source.indexNormal < 0)
     {
-        result.indexNormal += static_cast<uint32_t>(m_VertexNormalData.size());
+        source.indexNormal += static_cast<int32_t>(m_VertexNormalData.size()) + 1;    // +1 to maintain index 1-base
     }
-    else
-    {
-        result.indexNormal--; // 0-base
-    }
-
-    return result;
 }
 
 //------------------------------------------------------------------------------------------
