@@ -26,7 +26,8 @@ int main(int argc, char** argv)
     OBJParser parser;
     OBJState* state = parser.getOBJState();
 
-    parser.parseString("# OBJ Parser Test\n"
+    parser.parseString(
+        "# OBJ Parser Test\n"
         "g default\n"
         "v 0.0 0.0 0.0\n"
         "v 1.0 0.0 0.0\n"
@@ -38,7 +39,10 @@ int main(int argc, char** argv)
         "f 1/2/3 2/3/4 3/4/5 4/5/6\n"
         "f 1/2/3 2/3/4 3/4/5\n"
         "f 1//3 2//4 3//5\n"
-        "f 1/3 2/4 3/5\n");
+        "f 1/3 2/4 3/5\n"
+        "g lineTest\n"
+        "l 1/2 2/3 3/4 4/5 5/6\n"
+        "l 1 2 3 4\n");
 
     return 0;
 }

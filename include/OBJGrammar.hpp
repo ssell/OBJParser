@@ -132,6 +132,15 @@ public:
         // Line Rule
         //----------------------------------------------------------------
 
+        ruleLineIndices = +(qi::omit[qi::blank] >> ruleVertexGroupData);
+        
+        //ruleLineData = ruleLineIndices;
+
+        ruleLine =
+            qi::lit("l") >>
+            ruleLineIndices [boost::phoenix::bind(&OBJState::addLine, m_pOBJState, qi::_1)]>>
+            qi::eol;
+
         //----------------------------------------------------------------
         // Point Rule
         //----------------------------------------------------------------
@@ -140,7 +149,7 @@ public:
         // Start Rule
         //----------------------------------------------------------------
 
-        ruleStart = +(ruleGroup | ruleVertexSpatial | ruleVertexTexture | ruleVertexNormal | ruleFace);
+        ruleStart = +(ruleGroup | ruleVertexSpatial | ruleVertexTexture | ruleVertexNormal | ruleFace | ruleLine);
     }
 
     //--------------------------------------------------------------------
@@ -157,7 +166,11 @@ public:
 
     qi::rule<Iterator, int32_t(), Skipper> ruleIndexValue;
     qi::rule<Iterator, OBJFace(), Skipper> ruleFaceData;
-    qi::rule<Iterator, OBJFace(), Skipper> ruleLineData;
+
+    qi::rule<Iterator, std::vector<OBJVertexGroup>(), Skipper> ruleLineIndices;
+    qi::rule<Iterator, OBJLine()> ruleLineData;
+    qi::rule<Iterator, Skipper> ruleLine;
+
     qi::rule<Iterator, OBJFace(), Skipper> rulePointData;
 
     qi::rule<Iterator, Skipper> ruleVertexSpatial;
@@ -165,7 +178,6 @@ public:
     qi::rule<Iterator, Skipper> ruleVertexNormal;
 
     qi::rule<Iterator, Skipper> ruleFace;
-    qi::rule<Iterator, Skipper> ruleLine;
     qi::rule<Iterator, Skipper> rulePoint;
 
 protected:

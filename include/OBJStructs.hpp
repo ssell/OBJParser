@@ -120,8 +120,21 @@ BOOST_FUSION_ADAPT_STRUCT(OBJFace, (OBJVertexGroup, group0), (OBJVertexGroup, gr
  */
 struct OBJLine
 {
+    OBJLine() 
+    { 
+
+    }
+
+    OBJLine(std::vector<OBJVertexGroup> const& vector)
+    {
+        segments.reserve(segments.size() + vector.size());
+        segments.insert(segments.end(), vector.begin(), vector.end());
+    }
+
     std::vector<OBJVertexGroup> segments;
 };
+
+BOOST_FUSION_ADAPT_STRUCT(OBJLine, (std::vector<OBJVertexGroup>, segments))
 
 //------------------------------------------------------------------------------------------
 

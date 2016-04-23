@@ -34,13 +34,9 @@ OBJGroup::~OBJGroup()
 // Public Methods
 //------------------------------------------------------------------------------------------
 
-void OBJGroup::addLine(OBJLine const& line)
+void OBJGroup::addLine(std::vector<OBJVertexGroup> const& line)
 {
-    lines.emplace_back(OBJLine());
-
-    OBJLine* newLine = &lines[(lines.size() - 1)];
-    newLine->segments.reserve(line.segments.size());
-    newLine->segments.insert(newLine->segments.begin(), line.segments.begin(), line.segments.end());
+    lines.emplace_back(OBJLine(line));
 }
 
 void OBJGroup::addPointCollection(OBJPoint const& points)

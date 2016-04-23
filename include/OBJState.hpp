@@ -48,7 +48,7 @@ public:
     void addVertexNormal(OBJVector3 const& vector);
     
     void addFace(OBJFace face);
-    void addLine(OBJLine& line);
+    void addLine(std::vector<OBJVertexGroup>& line);
     void addPointCollection(OBJPoint& points);
 
 protected:

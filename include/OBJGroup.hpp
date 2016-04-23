@@ -34,7 +34,7 @@ public:
     OBJGroup();
     ~OBJGroup();
 
-    void addLine(OBJLine const& line);
+    void addLine(std::vector<OBJVertexGroup> const& line);
     void addPointCollection(OBJPoint const& points);
 
     //--------------------------------------------------------------------

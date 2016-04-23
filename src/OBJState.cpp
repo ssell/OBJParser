@@ -79,6 +79,7 @@ void OBJState::addActiveGroup(std::string const& name)
     {
         m_GroupMap[name] = OBJGroup();
         groupPtr = &(*m_GroupMap.find(name)).second;
+        groupPtr->name = name;
         groupPtr->faces.reserve(m_GroupIndicesReservedSize);
     }
 
@@ -117,9 +118,9 @@ void OBJState::addFace(OBJFace face)
     }
 }
 
-void OBJState::addLine(OBJLine& line)
+void OBJState::addLine(std::vector<OBJVertexGroup>& line)
 {
-    for(auto iter = line.segments.begin(); iter != line.segments.end(); ++iter)
+    for(auto iter = line.begin(); iter != line.end(); ++iter)
     {
         transformVertexGroup((*iter));
     }
