@@ -131,9 +131,9 @@ void OBJState::addLine(std::vector<OBJVertexGroup>& line)
     }
 }
 
-void OBJState::addPointCollection(OBJPoint& points)
+void OBJState::addPointCollection(std::vector<OBJVertexGroup>& points)
 {
-    for(auto iter = points.points.begin(); iter != points.points.end(); ++iter)
+    for(auto iter = points.begin(); iter != points.end(); ++iter)
     {
         transformVertexGroup((*iter));
     }

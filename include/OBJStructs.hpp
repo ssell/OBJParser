@@ -146,8 +146,21 @@ BOOST_FUSION_ADAPT_STRUCT(OBJLine, (std::vector<OBJVertexGroup>, segments))
  */
 struct OBJPoint
 {
+    OBJPoint() 
+    { 
+
+    }
+
+    OBJPoint(std::vector<OBJVertexGroup> const& vector)
+    {
+        points.reserve(points.size() + vector.size());
+        points.insert(points.end(), vector.begin(), vector.end());
+    }
+
     std::vector<OBJVertexGroup> points;
 };
+
+BOOST_FUSION_ADAPT_STRUCT(OBJPoint, (std::vector<OBJVertexGroup>, points))
 
 //------------------------------------------------------------------------------------------
 

@@ -39,15 +39,9 @@ void OBJGroup::addLine(std::vector<OBJVertexGroup> const& line)
     lines.emplace_back(OBJLine(line));
 }
 
-void OBJGroup::addPointCollection(OBJPoint const& points)
+void OBJGroup::addPointCollection(std::vector<OBJVertexGroup> const& points)
 {
-    this->points.emplace_back(OBJPoint());
-
-    OBJPoint* newPoints = &(this->points[(this->points.size() - 1)]);
-    newPoints->points.reserve(points.points.size());
-    newPoints->points.insert(newPoints->points.begin(), points.points.begin(), points.points.end());
-
-    // using points as three different names was a great choice
+    this->points.emplace_back(OBJPoint(points));
 }
 
 //------------------------------------------------------------------------------------------

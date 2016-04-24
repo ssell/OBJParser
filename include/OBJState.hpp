@@ -49,7 +49,7 @@ public:
     
     void addFace(OBJFace face);
     void addLine(std::vector<OBJVertexGroup>& line);
-    void addPointCollection(OBJPoint& points);
+    void addPointCollection(std::vector<OBJVertexGroup>& points);
 
 protected:
 

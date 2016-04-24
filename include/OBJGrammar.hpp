@@ -63,6 +63,11 @@ private:
 
 /**
  * \class OBJGrammar
+ *
+ * Spirit grammar for parsing OBJ format files.
+ * 
+ * Based on the format specification at:
+ * http://www.paulbourke.net/dataformats/obj/
  */
 template<typename Iterator, typename Skipper = OBJCommentSkipper<Iterator>>
 class OBJGrammar : public qi::grammar<Iterator, Skipper>
@@ -132,24 +137,35 @@ public:
         // Line Rule
         //----------------------------------------------------------------
 
-        ruleLineIndices = +(qi::omit[qi::blank] >> ruleVertexGroupData);
-        
-        //ruleLineData = ruleLineIndices;
+        ruleLineData = +(qi::omit[qi::blank] >> ruleVertexGroupData);
 
         ruleLine =
             qi::lit("l") >>
-            ruleLineIndices [boost::phoenix::bind(&OBJState::addLine, m_pOBJState, qi::_1)]>>
+            ruleLineData [boost::phoenix::bind(&OBJState::addLine, m_pOBJState, qi::_1)] >>
             qi::eol;
 
         //----------------------------------------------------------------
         // Point Rule
         //----------------------------------------------------------------
         
+        rulePointData = +(qi::omit[qi::blank] >> ruleVertexGroupData);
+
+        rulePoint =
+            qi::lit("p") >>
+            rulePointData [boost::phoenix::bind(&OBJState::addPointCollection, m_pOBJState, qi::_1)] >>
+            qi::eol;
+
         //----------------------------------------------------------------
         // Start Rule
         //----------------------------------------------------------------
 
-        ruleStart = +(ruleGroup | ruleVertexSpatial | ruleVertexTexture | ruleVertexNormal | ruleFace | ruleLine);
+        ruleStart = +(ruleGroup | 
+                      ruleVertexSpatial | 
+                      ruleVertexTexture | 
+                      ruleVertexNormal | 
+                      ruleFace | 
+                      ruleLine |
+                      rulePoint);
     }
 
     //--------------------------------------------------------------------
@@ -167,18 +183,17 @@ public:
     qi::rule<Iterator, int32_t(), Skipper> ruleIndexValue;
     qi::rule<Iterator, OBJFace(), Skipper> ruleFaceData;
 
-    qi::rule<Iterator, std::vector<OBJVertexGroup>(), Skipper> ruleLineIndices;
-    qi::rule<Iterator, OBJLine()> ruleLineData;
+    qi::rule<Iterator, Skipper> ruleFace;
+
+    qi::rule<Iterator, std::vector<OBJVertexGroup>(), Skipper> ruleLineData;
     qi::rule<Iterator, Skipper> ruleLine;
 
-    qi::rule<Iterator, OBJFace(), Skipper> rulePointData;
+    qi::rule<Iterator, std::vector<OBJVertexGroup>(), Skipper> rulePointData;
+    qi::rule<Iterator, Skipper> rulePoint;
 
     qi::rule<Iterator, Skipper> ruleVertexSpatial;
     qi::rule<Iterator, Skipper> ruleVertexTexture;
     qi::rule<Iterator, Skipper> ruleVertexNormal;
-
-    qi::rule<Iterator, Skipper> ruleFace;
-    qi::rule<Iterator, Skipper> rulePoint;
 
 protected:
 
