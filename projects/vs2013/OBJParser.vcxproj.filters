@@ -47,5 +47,8 @@
     <ClInclude Include="..\..\include\OBJGroup.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\OBJAuxillary.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

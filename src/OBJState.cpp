@@ -21,7 +21,8 @@
 //------------------------------------------------------------------------------------------
 
 OBJState::OBJState()
-    : m_GroupIndicesReservedSize(0)
+    : m_GroupFacesReservedSize(0),
+      m_GroupFreeFormReservedSize(0)
 {
 
 }
@@ -37,17 +38,49 @@ OBJState::~OBJState()
 
 void OBJState::clearState()
 {
+    m_VertexSpatialData.clear();
+    m_VertexTextureData.clear();
+    m_VertexNormalData.clear();
+
     m_ActiveGroups.clear();
     m_GroupMap.clear();
+    m_MaterialLibraries.clear();
+    m_TextureMapLibraries.clear();
+
+    resetAuxiliaryStates();
 }
 
-void OBJState::reserve(uint32_t const spatial, uint32_t const texture, uint32_t const normal, uint32_t const groupIndices)
+void OBJState::reserve(uint32_t const spatial, uint32_t const texture, uint32_t const normal, uint32_t const groupIndices, uint32_t const groupFreeForms)
 {
     m_VertexSpatialData.reserve(static_cast<std::vector<OBJVector3>::size_type>(spatial));
     m_VertexTextureData.reserve(static_cast<std::vector<OBJVector3>::size_type>(texture));
     m_VertexNormalData.reserve(static_cast<std::vector<OBJVector3>::size_type>(normal));
 
-    m_GroupIndicesReservedSize = groupIndices;
+    m_GroupFacesReservedSize = groupIndices;
+    m_GroupFreeFormReservedSize = groupFreeForms;
+}
+
+OBJAuxiliary OBJState::getAuxiliaryState(uint32_t index) const
+{
+    OBJAuxiliary result;
+
+    if(index < m_AuxiliaryStates.size())
+    {
+        result = m_AuxiliaryStates[index];
+    }
+
+    return result;
+}
+
+void OBJState::getGroups(std::vector<OBJGroup const*>& groups) const
+{
+    groups.clear();
+    groups.reserve(m_GroupMap.size());
+
+    for(auto iter = m_GroupMap.begin(); iter != m_GroupMap.end(); ++iter)
+    {
+        groups.emplace_back(&(*iter).second);
+    }
 }
 
 void OBJState::clearActiveGroups()
@@ -80,7 +113,7 @@ void OBJState::addActiveGroup(std::string const& name)
         m_GroupMap[name] = OBJGroup();
         groupPtr = &(*m_GroupMap.find(name)).second;
         groupPtr->name = name;
-        groupPtr->faces.reserve(m_GroupIndicesReservedSize);
+        groupPtr->faces.reserve(m_GroupFacesReservedSize);
     }
 
     if(groupPtr)
@@ -90,7 +123,7 @@ void OBJState::addActiveGroup(std::string const& name)
     }
 }
 
-void OBJState::addVertexSpatial(OBJVector3 const& vector)
+void OBJState::addVertexSpatial(OBJVector4 const& vector)
 {
     m_VertexSpatialData.emplace_back(vector);
 }
@@ -111,6 +144,8 @@ void OBJState::addFace(OBJFace face)
     transformVertexGroup(face.group1);
     transformVertexGroup(face.group2);
     transformVertexGroup(face.group3);
+
+    face.auxState = static_cast<uint32_t>(m_AuxiliaryStates.size() - 1);
 
     for(auto iter = m_ActiveGroups.begin(); iter != m_ActiveGroups.end(); ++iter)
     {
@@ -144,9 +179,113 @@ void OBJState::addPointCollection(std::vector<OBJVertexGroup>& points)
     }
 }
 
+void OBJState::setLevelOfDetail(uint32_t const lod)
+{
+    OBJAuxiliary auxState = m_AuxiliaryStates.back();
+    auxState.lod = lod;
+
+    if(auxState.lod > 100)
+    {
+        auxState.lod = 100;    // "Specifying an integer between 1 and 100 sets the..."
+    }
+
+    m_AuxiliaryStates.emplace_back(auxState);
+}
+
+void OBJState::setSmoothingGroup(uint32_t const group)
+{
+    OBJAuxiliary auxState = m_AuxiliaryStates.back();
+    auxState.smoothing = group;
+
+    m_AuxiliaryStates.emplace_back(auxState);
+}
+
+void OBJState::setBevelInterp(bool const on)
+{
+    OBJAuxiliary auxState = m_AuxiliaryStates.back();
+    auxState.bevelInterp = on;
+
+    m_AuxiliaryStates.emplace_back(auxState);
+}
+
+void OBJState::setColorInterp(bool const on)
+{
+    OBJAuxiliary auxState = m_AuxiliaryStates.back();
+    auxState.colorInterp = on;
+
+    m_AuxiliaryStates.emplace_back(auxState);
+}
+
+void OBJState::setDissolveInterp(bool const on)
+{
+    OBJAuxiliary auxState = m_AuxiliaryStates.back();
+    auxState.dissolveInterp = on;
+
+    m_AuxiliaryStates.emplace_back(auxState);
+}
+
+void OBJState::setMaterial(std::string const& name)
+{
+    OBJAuxiliary auxState = m_AuxiliaryStates.back();
+    auxState.material = name;
+
+    m_AuxiliaryStates.emplace_back(auxState);
+}
+
+void OBJState::addMaterialLibrary(std::string const& name)
+{
+    m_MaterialLibraries.push_back(name);
+}
+
+void OBJState::setTextureMap(std::string const& name)
+{
+    OBJAuxiliary auxState = m_AuxiliaryStates.back();
+    auxState.textureMap = name;
+
+    m_AuxiliaryStates.emplace_back(auxState);
+}
+
+void OBJState::addTextureMapLibrary(std::string const& name)
+{
+    m_TextureMapLibraries.push_back(name);
+}
+
+void OBJState::setShadowObject(std::string const& name)
+{
+    OBJAuxiliary auxState = m_AuxiliaryStates.back();
+    auxState.shadowObj = name;
+
+    if(auxState.shadowObj.compare("off") == 0)
+    {
+        auxState.shadowObj = "";
+    }
+
+    m_AuxiliaryStates.emplace_back(auxState);
+}
+
+void OBJState::setTracingObject(std::string const& name)
+{
+    OBJAuxiliary auxState = m_AuxiliaryStates.back();
+    auxState.traceObj = name;
+
+    if(auxState.traceObj.compare("off") == 0)
+    {
+        auxState.traceObj = "";
+    }
+
+    m_AuxiliaryStates.emplace_back(auxState);
+}
+
 //------------------------------------------------------------------------------------------
 // Protected Methods
 //------------------------------------------------------------------------------------------
+
+void OBJState::resetAuxiliaryStates() 
+{
+    m_AuxiliaryStates.clear();
+    m_AuxiliaryStates.reserve(50);                   // Arbitrary reserve
+    m_AuxiliaryStates.emplace_back(OBJAuxiliary());  // Set initial default state
+}
 
 void OBJState::transformVertexGroup(OBJVertexGroup& source) const
 {

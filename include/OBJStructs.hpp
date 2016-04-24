@@ -1,18 +1,18 @@
 /**
-* Copyright 2016 Steven T Sell (ssell@ocularinteractive.com)
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*    http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2016 Steven T Sell (ssell@ocularinteractive.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #ifndef __H__OBJ_PARSER_STRUCTS__H__
 #define __H__OBJ_PARSER_STRUCTS__H__
@@ -55,6 +55,24 @@ struct OBJVector3
 };
 
 BOOST_FUSION_ADAPT_STRUCT(OBJVector3, (float, x), (float, y), (float, z))
+
+//------------------------------------------------------------------------------------------
+
+/**
+ * \stuct OBJVector4
+ * \brief Simple four-component vector struct
+ */
+ struct OBJVector4
+ {
+     OBJVector4() : x(0.0f), y(0.0f), z(0.0f), w(1.0f) { }
+
+     float x;
+     float y;
+     float z;
+     float w;
+ };
+
+BOOST_FUSION_ADAPT_STRUCT(OBJVector4, (float, x), (float, y), (float, z), (float, w))
 
 //------------------------------------------------------------------------------------------
 
@@ -102,13 +120,23 @@ BOOST_FUSION_ADAPT_STRUCT(OBJVertexGroup, (int32_t, indexSpatial), (int32_t, ind
  */
 struct OBJFace
 {
-    OBJVertexGroup group0;
-    OBJVertexGroup group1;
-    OBJVertexGroup group2;
-    OBJVertexGroup group3;
+    OBJFace()
+        : auxState(0)
+    {
+    
+    }
+
+    //--------------------------------------------------------------------
+
+    OBJVertexGroup group0;  ///< First vertex for the face
+    OBJVertexGroup group1;  ///< Second vertex for the face
+    OBJVertexGroup group2;  ///< Third vertex for the face
+    OBJVertexGroup group3;  ///< Fourth vertex for the face. Used only for Quad faces.
+
+    uint32_t auxState;      ///< The active auxiliary state when this face was specified. See OBJState::getAuxiliaryState
 };
 
-BOOST_FUSION_ADAPT_STRUCT(OBJFace, (OBJVertexGroup, group0), (OBJVertexGroup, group1), (OBJVertexGroup, group2), (OBJVertexGroup, group3))
+BOOST_FUSION_ADAPT_STRUCT(OBJFace, (OBJVertexGroup, group0), (OBJVertexGroup, group1), (OBJVertexGroup, group2), (OBJVertexGroup, group3), (uint32_t, auxState))
 
 //------------------------------------------------------------------------------------------
 
