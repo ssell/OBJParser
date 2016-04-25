@@ -86,12 +86,15 @@ public:
         setupMaterialRules();
         setupAuxiliaryRules();
 
+        ruleEmptyLine = *(qi::blank) >> qi::eol;
+
         ruleStart = +(ruleGroup       |
                       ruleVertices    |
                       ruleFaces       | 
                       ruleFreeForms   |
                       ruleMaterials   |
-                      ruleAuxiliaries);
+                      ruleAuxiliaries |
+                      ruleEmptyLine);
     }
 
 protected:
@@ -102,9 +105,10 @@ protected:
 
     void setupDataRules()
     {
-        ruleVector2Data = qi::skip(qi::blank)[qi::float_ >> qi::float_];
-        ruleVector3Data = qi::skip(qi::blank)[qi::float_ >> qi::float_ >> qi::float_];
-        ruleVector4Data = qi::skip(qi::blank)[qi::float_ >> qi::float_ >> qi::float_ >> -(qi::float_)];
+        // At the end of the vector rules we consume any unexcepted characters to account for certain obj writers
+        ruleVector2Data = qi::skip(qi::blank)[qi::float_ >> qi::float_ >> *(qi::char_ - qi::eol)];
+        ruleVector3Data = qi::skip(qi::blank)[qi::float_ >> qi::float_ >> qi::float_ >> *(qi::char_ - qi::eol)];
+        ruleVector4Data = qi::skip(qi::blank)[qi::float_ >> qi::float_ >> qi::float_ >> -(qi::float_) >> *(qi::char_ - qi::eol)];
 
         ruleIndexValue = qi::int_ | qi::attr(0);
         ruleVertexGroupData = ruleIndexValue >> -qi::omit[qi::char_('/')] >> ruleIndexValue >> -qi::omit[qi::char_('/')] >> ruleIndexValue;
@@ -145,11 +149,19 @@ protected:
     {
         // Face Rule
 
-        ruleFaceData = ruleVertexGroupData >> qi::omit[qi::blank] >> ruleVertexGroupData >> qi::omit[qi::blank] >> ruleVertexGroupData >> -qi::omit[qi::blank] >> -(ruleVertexGroupData);
+        ruleFaceData = 
+            ruleVertexGroupData >> 
+            qi::omit[qi::blank] >> 
+            ruleVertexGroupData >> 
+            qi::omit[qi::blank] >> 
+            ruleVertexGroupData >> 
+            -qi::omit[qi::blank] >> 
+            -(ruleVertexGroupData);
 
         ruleFace =
             qi::lit("f ") >>
             ruleFaceData [boost::phoenix::bind(&OBJState::addFace, m_pOBJState, qi::_1)] >>
+            *(qi::char_ - qi::eol) >>
             qi::eol;
 
         // Line Rule
@@ -159,6 +171,7 @@ protected:
         ruleLine =
             qi::lit("l") >>
             ruleLineData [boost::phoenix::bind(&OBJState::addLine, m_pOBJState, qi::_1)] >>
+            *(qi::char_ - qi::eol) >>
             qi::eol;
 
         // Point Rule
@@ -168,6 +181,7 @@ protected:
         rulePoint =
             qi::lit("p") >>
             rulePointData [boost::phoenix::bind(&OBJState::addPointCollection, m_pOBJState, qi::_1)] >>
+            *(qi::char_ - qi::eol) >>
             qi::eol;
         
         ruleFaces = ruleFace | ruleLine | rulePoint;
@@ -271,6 +285,7 @@ protected:
     qi::rule<Iterator, Skipper> ruleFreeForms;
     qi::rule<Iterator, Skipper> ruleMaterials;
     qi::rule<Iterator, Skipper> ruleAuxiliaries;
+    qi::rule<Iterator, Skipper> ruleEmptyLine;
 
     //--------------------------------------------------------------------
     // Group Rules

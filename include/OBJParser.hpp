@@ -27,7 +27,7 @@
 // This may drastically speed up file I/O but requires both the Boost System and IOStream library dependencies.
 // System is used to calculate the needed memory for the mapping, while IOStream contains the memory map implementation.
 
-// #define OBJ_PARSER_USE_MEM_MAP
+#define OBJ_PARSER_USE_MEM_MAP
 
 //------------------------------------------------------------------------------------------
 // OBJ Parser
@@ -50,6 +50,9 @@ public:
 
 protected:
 
+    bool parseFilefstream(std::string const& path);
+    bool parseFileMemMap(std::string const& path);
+   
     OBJState m_OBJState;
 
 private:

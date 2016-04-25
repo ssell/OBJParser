@@ -19,7 +19,6 @@
 
 #ifdef OBJ_PARSER_USE_MEM_MAP
 #include <boost/iostreams/device/mapped_file.hpp>
-using FileIterator = boost::iostreams::mapped_file::const_iterator;
 #else
 #include <fstream>
 #endif
@@ -57,6 +56,15 @@ bool OBJParser::parseString(std::string const& str)
 bool OBJParser::parseFile(std::string const& path)
 {
     bool result = false;
+
+    m_OBJState.clearState();
+
+#ifdef OBJ_PARSER_USE_MEM_MAP
+    result = parseFileMemMap(path);
+#else
+    result = parseFilefstream(path);
+#endif
+
     return result;
 }
 
@@ -68,6 +76,44 @@ OBJState* OBJParser::getOBJState()
 //------------------------------------------------------------------------------------------
 // Protected Methods
 //------------------------------------------------------------------------------------------
+
+bool OBJParser::parseFilefstream(std::string const& path)
+{
+    bool result = false;
+
+    return result;
+}
+
+bool OBJParser::parseFileMemMap(std::string const& path)
+{
+    bool result = false;
+
+#ifdef OBJ_PARSER_USE_MEM_MAP
+    boost::iostreams::mapped_file mappedFile(path, boost::iostreams::mapped_file::readonly);
+
+    if(mappedFile.is_open())
+    {
+        auto first = mappedFile.const_data();
+        auto last = first + mappedFile.size();
+
+        using Iterator = decltype(first);
+
+        OBJGrammar<Iterator> grammar(&m_OBJState);
+        OBJCommentSkipper<Iterator> skipper;
+
+        result = qi::phrase_parse(first, last, grammar, skipper);
+
+        if(result)
+        {
+            result = (first == last);
+        }
+
+        mappedFile.close();
+    }
+#endif
+
+    return result;
+}
 
 //------------------------------------------------------------------------------------------
 // Private Methods

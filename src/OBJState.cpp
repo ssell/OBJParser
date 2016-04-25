@@ -83,6 +83,21 @@ void OBJState::getGroups(std::vector<OBJGroup const*>& groups) const
     }
 }
 
+std::vector<OBJVector4> const* OBJState::getSpatialData() const
+{
+    return &m_VertexSpatialData;
+}
+
+std::vector<OBJVector2> const* OBJState::getTextureData() const
+{
+    return &m_VertexTextureData;
+}
+
+std::vector<OBJVector3> const* OBJState::getNormalData() const
+{
+    return &m_VertexNormalData;
+}
+
 void OBJState::clearActiveGroups()
 {
     for(auto iter = m_ActiveGroups.begin(); iter != m_ActiveGroups.end(); ++iter)

@@ -88,6 +88,10 @@ public:
      */
     void getGroups(std::vector<OBJGroup const*>& groups) const;
 
+    std::vector<OBJVector4> const* getSpatialData() const;
+    std::vector<OBJVector2> const* getTextureData() const;
+    std::vector<OBJVector3> const* getNormalData() const;
+
     //--------------------------------------------------------------------
     // Parser/Grammar Methods
     //--------------------------------------------------------------------
