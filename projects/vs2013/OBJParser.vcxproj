@@ -85,6 +85,8 @@
     <ClCompile Include="..\..\src\OBJGroup.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\include\MTLGrammar.hpp" />
+    <ClInclude Include="..\..\include\MTLMaterial.hpp" />
     <ClInclude Include="..\..\include\OBJAuxillary.hpp" />
     <ClInclude Include="..\..\include\OBJGrammar.hpp" />
     <ClInclude Include="..\..\include\OBJGroup.hpp" />
