@@ -247,9 +247,9 @@ void OBJState::setMaterial(std::string const& name)
     m_AuxiliaryStates.emplace_back(auxState);
 }
 
-void OBJState::addMaterialLibrary(std::string const& name)
+void OBJState::addMaterialLibrary(std::string const& path)
 {
-    m_MaterialLibraries.push_back(name);
+    m_MaterialLibraries.push_back(path);
 }
 
 void OBJState::setTextureMap(std::string const& name)
@@ -260,9 +260,9 @@ void OBJState::setTextureMap(std::string const& name)
     m_AuxiliaryStates.emplace_back(auxState);
 }
 
-void OBJState::addTextureMapLibrary(std::string const& name)
+void OBJState::addTextureMapLibrary(std::string const& path)
 {
-    m_TextureMapLibraries.push_back(name);
+    m_TextureMapLibraries.push_back(path);
 }
 
 void OBJState::setShadowObject(std::string const& name)

@@ -22,43 +22,13 @@
 #pragma warning (disable:4348)
 
 #include "OBJState.hpp"
+#include "OBJGrammarSkipper.hpp"
 
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix.hpp>
 
 using namespace boost::spirit;
 
-//------------------------------------------------------------------------------------------
-// OBJ Comment Skipper
-//------------------------------------------------------------------------------------------
-
-/**
- * \class OBJCommentSkipper
- * 
- * Grammar defining how to skip OBJ comments.
- * A comment is started with the '#' character and continues until the end of the line.
- */
-template<typename Iterator>
-class OBJCommentSkipper : public boost::spirit::qi::grammar<Iterator>
-{
-public:
-
-    OBJCommentSkipper()
-        : OBJCommentSkipper::base_type(ruleSkip)
-    {
-        ruleSkip = (qi::char_('#') >> *(qi::char_ - qi::eol) >> qi::eol);
-    }
-
-    boost::spirit::qi::rule<Iterator> ruleSkip;
-
-protected:
-
-private:
-};
-
-
-//------------------------------------------------------------------------------------------
-// OBJ Grammar
 //------------------------------------------------------------------------------------------
 
 /**

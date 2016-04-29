@@ -16,6 +16,7 @@
 
 #include "OBJParser.hpp"
 #include "OBJGrammar.hpp"
+#include "MTLGrammar.hpp"
 
 #ifdef OBJ_PARSER_USE_MEM_MAP
 #include <boost/iostreams/device/mapped_file.hpp>
@@ -89,6 +90,11 @@ bool OBJParser::parseFileMemMap(std::string const& path)
     bool result = false;
 
 #ifdef OBJ_PARSER_USE_MEM_MAP
+
+    //--------------------------------------------------------------------
+    // Parse the OBJ file
+    //--------------------------------------------------------------------
+
     boost::iostreams::mapped_file mappedFile(path, boost::iostreams::mapped_file::readonly);
 
     if(mappedFile.is_open())
@@ -110,6 +116,13 @@ bool OBJParser::parseFileMemMap(std::string const& path)
 
         mappedFile.close();
     }
+
+    //--------------------------------------------------------------------
+    // Parse the MTL file (if any specified)
+    //--------------------------------------------------------------------
+
+    
+
 #endif
 
     return result;

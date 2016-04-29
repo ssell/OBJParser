@@ -17,9 +17,118 @@
 #ifndef __H__OBJ_PARSER_MTL_GRAMMAR__H__
 #define __H__OBJ_PARSER_MTL_GRAMMAR__H__
 
+#define BOOST_SPIRIT_USE_PHOENIX_V3
+
+#pragma warning (disable:4348)
+
+#include "OBJState.hpp"
+#include "OBJGrammarSkipper.hpp"
+
+#include <boost/spirit/include/qi.hpp>
+#include <boost/spirit/include/phoenix.hpp>
+
+using namespace boost::spirit;
+
 //------------------------------------------------------------------------------------------
 
+/**
+ * \class MTLGrammar
+ *
+ * Spirit grammar for parsing MTL format files.
+ *
+ * Based on the format specification at:
+ * http://www.paulbourke.net/dataformats/mtl/
+ */
+template<typename Iterator, typename Skipper = OBJCommentSkipper<Iterator>>
+class MTLGrammar : public qi::grammar<Iterator, Skipper>
+{
+public:
 
+    MTLGrammar(OBJState* state)
+        : OBJGrammar::base_type(ruleStart),
+          m_pOBJState(state)
+    {
+        setupGeneralRules();
+        setupNewMaterialRules();
+        setupColorIlluminationRules();
+        setupTextureMapRules();
+        setupReflectionMapRules();
+
+        ruleStart = (ruleNewMaterial |
+                     ruleColorIllumination |
+                     ruleTextureMap |
+                     ruleReflectionMap);
+    }
+
+protected:
+
+    //--------------------------------------------------------------------------------------
+    // Rule Setup Methods
+    //--------------------------------------------------------------------------------------
+
+    void setupGeneralRules()
+    {
+        ruleString = *(qi::char_ - qi::space);
+    }
+
+    void setupNewMaterialRules()
+    {
+        ruleNewMaterial =
+            qi::lit("newmtl ") >>
+            ruleString >>
+            qi::eol;
+    }
+
+    void setupColorIlluminationRules()
+    {
+
+    }
+
+    void setupTextureMapRules()
+    {
+
+    }
+
+    void setupReflectionMapRules()
+    {
+
+    }
+
+    //--------------------------------------------------------------------------------------
+    // Member Variables
+    //--------------------------------------------------------------------------------------
+    
+    //--------------------------------------------------------------------
+    // Top-Level Rules
+
+    qi::rule<Iterator, Skipper> ruleStart;
+    qi::rule<Iterator, Skipper> ruleNewMaterial;
+    qi::rule<Iterator, Skipper> ruleColorIllumination;
+    qi::rule<Iterator, Skipper> ruleTextureMap;
+    qi::rule<Iterator, Skipper> ruleReflectionMap;
+
+    //--------------------------------------------------------------------
+    // General Rules
+
+    qi::rule<Iterator, std::string(), Skipper> ruleString;
+
+    //--------------------------------------------------------------------
+    // Color / Illumination Rules
+
+    //--------------------------------------------------------------------
+    // Texture Map Rules
+
+    //--------------------------------------------------------------------
+    // Reflection Map Rules
+
+    //--------------------------------------------------------------------
+    // Non-Rule Members
+
+    OBJState* m_pOBJState;
+
+private:
+
+};
 
 //------------------------------------------------------------------------------------------
 

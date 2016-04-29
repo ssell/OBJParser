@@ -19,6 +19,7 @@
 
 #include "OBJGroup.hpp"
 #include "OBJAuxillary.hpp"
+#include "MTLMaterial.hpp"
 
 #include <unordered_map>
 
@@ -88,8 +89,22 @@ public:
      */
     void getGroups(std::vector<OBJGroup const*>& groups) const;
 
+    /**
+     * Returns a pointer to the container of all parsed spatial vertex data.
+     * \note Keep in mind that OBJ indices are 1-based while the data container indices are 0-based.
+     */
     std::vector<OBJVector4> const* getSpatialData() const;
+
+    /**
+     * Returns a pointer to the container of all parsed texture coordinate vertex data.
+     * \note Keep in mind that OBJ indices are 1-based while the data container indices are 0-based.
+     */
     std::vector<OBJVector2> const* getTextureData() const;
+
+    /**
+     * Returns a pointer to the container of all parsed normal vertex data.
+     * \note Keep in mind that OBJ indices are 1-based while the data container indices are 0-based.
+     */
     std::vector<OBJVector3> const* getNormalData() const;
 
     //--------------------------------------------------------------------
@@ -167,16 +182,103 @@ public:
      */
     void addPointCollection(std::vector<OBJVertexGroup>& points);
     
+    /**
+     * Sets the smoothing group for the current auxiliary state.
+     *
+     * \note Typically should only be used by the OBJGrammar class.
+     *
+     * \param[in] group
+     */
     void setSmoothingGroup(uint32_t group);
+    
+    /**
+     * Sets the level-of-detail for the current auxiliary state.
+     *
+     * \note Typically should only be used by the OBJGrammar class.
+     *
+     * \param[in] lod
+     */
     void setLevelOfDetail(uint32_t lod);
+    
+    /**
+     * Enables/disables bevel interpolation for the current auxiliary state.
+     *
+     * \note Typically should only be used by the OBJGrammar class.
+     *
+     * \param[in] on
+     */
     void setBevelInterp(bool on);
+    
+    /**
+     * Enables/disables color interpolation for the current auxiliary state.
+     *
+     * \note Typically should only be used by the OBJGrammar class.
+     *
+     * \param[in] on
+     */
     void setColorInterp(bool on);
+    
+    /**
+     * Enables/disables dissolve interpolation for the current auxiliary state.
+     *
+     * \note Typically should only be used by the OBJGrammar class.
+     *
+     * \param[in] on
+     */
     void setDissolveInterp(bool on);
+    
+    /**
+     * Sets the bound material for the current auxiliary state.
+     *
+     * \note Typically should only be used by the OBJGrammar class.
+     *
+     * \param[in] name
+     */
     void setMaterial(std::string const& name);
-    void addMaterialLibrary(std::string const& name);
+    
+    /**
+     * Adds a new material library to create materials from.
+     *
+     * \note Typically should only be used by the OBJGrammar class.
+     *
+     * \param[in] path Relative path, including extension, from the current OBJ file. 
+     */
+    void addMaterialLibrary(std::string const& path);
+    
+    /**
+     * Sets the bound texture for the current auxiliary state.
+     *
+     * \note Typically should only be used by the OBJGrammar class.
+     *
+     * \param[in] name
+     */
     void setTextureMap(std::string const& name);
-    void addTextureMapLibrary(std::string const& name);
+    
+    /**
+     * Adds a new texture library to create textures from.
+     *
+     * \note Typically should only be used by the OBJGrammar class.
+     *
+     * \param[in] path Relative path, including extension, from the current OBJ file. 
+     */
+    void addTextureMapLibrary(std::string const& path);
+    
+    /**
+     * Sets the bound shadow object for the current auxiliary state.
+     *
+     * \note Typically should only be used by the OBJGrammar class.
+     *
+     * \param[in] name
+     */
     void setShadowObject(std::string const& name);
+    
+    /**
+     * Sets the bound tracing object for the current auxiliary state.
+     *
+     * \note Typically should only be used by the OBJGrammar class.
+     *
+     * \param[in] name
+     */
     void setTracingObject(std::string const& name);
 
 protected:
@@ -190,6 +292,8 @@ protected:
     uint32_t m_GroupFreeFormReservedSize;
 
     std::unordered_map<std::string, OBJGroup> m_GroupMap;
+    std::unordered_map<std::string, OBJMaterial> m_MaterialMap;
+
     std::vector<OBJGroup*> m_ActiveGroups;
 
     std::vector<OBJVector4> m_VertexSpatialData;
