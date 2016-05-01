@@ -62,9 +62,20 @@ struct OBJMaterialProperty
  */
 struct OBJMaterialDissolve
 {
-    float factor;                 ///< The amount the material dissolves. 0.0: fully dissolved, transparent; 1.0: opaque
+    OBJMaterialDissolve()
+        : halo(false),
+          factor(1.0f)
+    {
+
+    }
+
+    //--------------------------------------------------------------------
+    
     bool halo;                    ///< True if dissolve depends on surface orientation relative to viewer
+    float factor;                 ///< The amount the material dissolves. 0.0: fully dissolved, transparent; 1.0: opaque
 };
+
+BOOST_FUSION_ADAPT_STRUCT(OBJMaterialDissolve, (bool, halo), (float, factor));
 
 //------------------------------------------------------------------------------------------
 
@@ -166,11 +177,25 @@ class OBJMaterial
 {
 public:
 
+    OBJMaterial();
+    ~OBJMaterial();
+
+    //--------------------------------------------------------------------------------------
+    // MTL Parser/Grammar Methods
+    //--------------------------------------------------------------------------------------
+
+    void setAmbientReflectivityRGB(OBJVector3 const& rgb);
+    void setAmbientReflectivityXYZ(OBJVector3 const& xyz);
+    void setAmbientReflectivityRFL(std::string const& path, float factor);
+
+    //--------------------------------------------------------------------------------------
+    // Member Variables
+    //--------------------------------------------------------------------------------------
+
     std::string name;
 
     //--------------------------------------------------------------------
     // Color and Illumination
-    //--------------------------------------------------------------------
 
     OBJMaterialProperty ambientReflectivity;
     OBJMaterialProperty diffuseReflectivity;
@@ -187,7 +212,6 @@ public:
 
     //--------------------------------------------------------------------
     // Texture Map
-    //--------------------------------------------------------------------
 
     OBJTextureDescriptor textureAmbient;
     OBJTextureDescriptor textureDiffuse;
@@ -202,7 +226,6 @@ public:
 
     //--------------------------------------------------------------------
     // Reflection Map
-    //--------------------------------------------------------------------
 
     OBJReflectionMapType reflectionMapType;
 

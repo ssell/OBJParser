@@ -19,7 +19,7 @@
 
 #include "OBJGroup.hpp"
 #include "OBJAuxillary.hpp"
-#include "MTLMaterial.hpp"
+#include "OBJMaterial.hpp"
 
 #include <unordered_map>
 
@@ -108,7 +108,7 @@ public:
     std::vector<OBJVector3> const* getNormalData() const;
 
     //--------------------------------------------------------------------
-    // Parser/Grammar Methods
+    // OBJ Parser/Grammar Methods
     //--------------------------------------------------------------------
 
     /**
@@ -280,6 +280,12 @@ public:
      * \param[in] name
      */
     void setTracingObject(std::string const& name);
+
+    //--------------------------------------------------------------------
+    // MTL Parser/Grammar Methods
+    //--------------------------------------------------------------------
+
+
 
 protected:
 

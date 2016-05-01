@@ -53,10 +53,10 @@
     <ClInclude Include="..\..\include\MTLGrammar.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\MTLMaterial.hpp">
+    <ClInclude Include="..\..\include\OBJGrammarSkipper.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\OBJGrammarSkipper.hpp">
+    <ClInclude Include="..\..\include\OBJMaterial.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

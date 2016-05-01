@@ -88,6 +88,9 @@ protected:
 
     void setupGroupRules()
     {
+        // Parses group lines. Example:
+        // g default
+
         ruleGroupName = *(qi::char_ - ascii::space);
         ruleGroup = 
             qi::lit("g ") [boost::phoenix::bind(&OBJState::clearActiveGroups, m_pOBJState)] >> 
@@ -97,6 +100,11 @@ protected:
 
     void setupVertexRules()
     {
+        // Parses vertex data lines. Example:
+        //  v 0.0 1.0 2.0
+        //  vt 1.0 1.0
+        //  vn 0.0 0.0 0.0
+
         ruleVertexSpatial = 
             qi::lit("v ") >> 
             ruleVector4Data [boost::phoenix::bind(&OBJState::addVertexSpatial, m_pOBJState, qi::_1)] >> 
@@ -117,7 +125,12 @@ protected:
 
     void setupFaceRules()
     {
+        //----------------------------------------------------------------
         // Face Rule
+        //----------------------------------------------------------------
+
+        // Parses face lines. Example:
+        // f 1//3 2//4 3//5
 
         ruleFaceData = 
             ruleVertexGroupData >> 
@@ -133,8 +146,13 @@ protected:
             ruleFaceData [boost::phoenix::bind(&OBJState::addFace, m_pOBJState, qi::_1)] >>
             *(qi::char_ - qi::eol) >>
             qi::eol;
-
+        
+        //----------------------------------------------------------------
         // Line Rule
+        //----------------------------------------------------------------
+
+        // Parses line lines. Example:
+        // l 1/1 2/2 3/3 4/4 5/5 
 
         ruleLineData = +(qi::omit[qi::blank] >> ruleVertexGroupData);
 
@@ -143,8 +161,13 @@ protected:
             ruleLineData [boost::phoenix::bind(&OBJState::addLine, m_pOBJState, qi::_1)] >>
             *(qi::char_ - qi::eol) >>
             qi::eol;
-
+        
+        //----------------------------------------------------------------
         // Point Rule
+        //----------------------------------------------------------------
+
+        // Parses point lines. Example:
+        // p 1 2 3 4 5
         
         rulePointData = +(qi::omit[qi::blank] >> ruleVertexGroupData);
 
@@ -164,6 +187,10 @@ protected:
 
     void setupMaterialRules()
     {
+        // Parses material lines. Example:
+        // mtllib test.mtl
+        // usemtl test
+
         ruleMaterialLibrary = 
             qi::lit("mtllib ") >> 
             +(ruleName [boost::phoenix::bind(&OBJState::addMaterialLibrary, m_pOBJState, qi::_1)] >> 
