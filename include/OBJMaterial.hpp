@@ -21,6 +21,7 @@
 
 #include <string>
 #include <cstdint>
+#include <array>
 
 //------------------------------------------------------------------------------------------
 
@@ -30,6 +31,20 @@ enum class OBJMaterialPropertyType
     XYZ,     ///< Property is specified using CIEXYZ values
     RFL      ///< Property is specified using a .rfl file
 };
+
+struct OBJMaterialPropertyRFL
+{
+    OBJMaterialPropertyRFL()
+        : factor(1.0f)
+    {
+
+    }
+
+    std::string path;
+    float factor;
+};
+
+BOOST_FUSION_ADAPT_STRUCT(OBJMaterialPropertyRFL, (std::string, path), (float, factor));
 
 /**
  * \struct OBJMaterialProperty
@@ -51,8 +66,7 @@ struct OBJMaterialProperty
         float b, z;
     };
 
-    float factor;                 ///< Optional argument specified along with a rfl file. Only used if type is RFL
-    std::string rflPath;          ///< .rfl file that the property is specified in. Only used if type is RFL
+    OBJMaterialPropertyRFL rfl;
 };
 
 //------------------------------------------------------------------------------------------
@@ -100,20 +114,10 @@ enum class OBJTextureChannel
  */
 struct OBJTextureDescriptor
 {
-    OBJTextureDescriptor()
-        : blendU(true),
-          blendV(true), 
-          clamp(false),
-          colorCorrection(false),
-          resolution(0),
-          bumpMultiplier(1.0f),
-          boost(1.0f),
-          rangeModBase(0.0f),
-          rangeModGain(1.0f),
-          imfchan(OBJTextureChannel::None)
-    {
+    OBJTextureDescriptor();
+    ~OBJTextureDescriptor();
 
-    }
+    OBJTextureDescriptor& operator=(OBJTextureDescriptor const& rhs);
 
     //--------------------------------------------------------------------
 
@@ -141,31 +145,21 @@ struct OBJTextureDescriptor
 
 //------------------------------------------------------------------------------------------
 
-enum OBJReflectionMapType
+enum class OBJReflectionMapType
 {
     None = 0,
     Sphere,
     Cube
 };
 
-struct OBJReflectionMapSphere
+enum class OBJReflectionMapCubeSide
 {
-    OBJTextureDescriptor texture;
-};
-
-struct OBJReflectionMapCubeSide
-{
-    OBJTextureDescriptor texture;
-};
-
-struct OBJReflectionMapCube
-{
-    OBJReflectionMapCubeSide sideTop;
-    OBJReflectionMapCubeSide sideBottom;
-    OBJReflectionMapCubeSide sideFront;
-    OBJReflectionMapCubeSide sideBack;
-    OBJReflectionMapCubeSide sideLeft;
-    OBJReflectionMapCubeSide sideRight;
+    Front = 0,
+    Back,
+    Top,
+    Bottom,
+    Left,
+    Right
 };
 
 //------------------------------------------------------------------------------------------
@@ -180,59 +174,170 @@ public:
     OBJMaterial();
     ~OBJMaterial();
 
-    //--------------------------------------------------------------------------------------
-    // MTL Parser/Grammar Methods
-    //--------------------------------------------------------------------------------------
+    //--------------------------------------------------------------------
+
+    // Name
+
+    void setName(std::string const& name);
+    std::string const& getName() const;
+
+    // Ambient Reflectivity
 
     void setAmbientReflectivityRGB(OBJVector3 const& rgb);
     void setAmbientReflectivityXYZ(OBJVector3 const& xyz);
-    void setAmbientReflectivityRFL(std::string const& path, float factor);
+    void setAmbientReflectivityRFL(OBJMaterialPropertyRFL const& rfl);
 
-    //--------------------------------------------------------------------------------------
+    OBJMaterialProperty const& getAmbientReflectivity() const;
+
+    // Diffuse Reflectivity
+
+    void setDiffuseReflectivityRGB(OBJVector3 const& rgb);
+    void setDiffuseReflectivityXYZ(OBJVector3 const& xyz);
+    void setDiffuseReflectivityRFL(OBJMaterialPropertyRFL const& rfl);
+
+    OBJMaterialProperty const& getDiffuseReflectivity() const;
+
+    // Specular Reflectivity
+
+    void setSpecularReflectivityRGB(OBJVector3 const& rgb);
+    void setSpecularReflectivityXYZ(OBJVector3 const& xyz);
+    void setSpecularReflectivityRFL(OBJMaterialPropertyRFL const& rfl);
+
+    OBJMaterialProperty const& getSpecularReflectivity() const;
+
+    // Transmission Filter
+
+    void setTransmissionFilterRGB(OBJVector3 const& rgb);
+    void setTransmissionFilterXYZ(OBJVector3 const& xyz);
+    void setTransmissionFilterRFL(OBJMaterialPropertyRFL const& rfl);
+
+    OBJMaterialProperty const& getTransmissionFilter() const;
+
+    // Dissolve
+
+    void setDissolve(OBJMaterialDissolve const& dissolve);
+    OBJMaterialDissolve const& getDissolve() const;
+
+    // Illumination Model
+
+    void setIlluminationmodel(uint32_t model);
+    uint32_t getIlluminationModel() const;
+
+    // Specular Exponent
+
+    void setSpecularExponent(uint32_t exponent);
+    uint32_t getSpecularExponent() const;
+
+    // Sharpness
+
+    void setSharpness(uint32_t sharpness);
+    uint32_t getSharpness() const;
+
+    // Optical Density
+
+    void setOpticalDensity(float density);
+    float getOpticalDensity() const;
+
+    // Ambient Texture
+
+    void setAmbientTexture(OBJTextureDescriptor const& descriptor);
+    OBJTextureDescriptor const& getAmbientTexture() const;
+
+    // Diffuse Texture
+
+    void setDiffuseTexture(OBJTextureDescriptor const& descriptor);
+    OBJTextureDescriptor const& getDiffuseTexture() const;
+
+    // Specular Texture
+
+    void setSpecularTexture(OBJTextureDescriptor const& descriptor);
+    OBJTextureDescriptor const& getSpecularTexture() const;
+
+    // SpecularExponent Texture
+
+    void setSpecularExponentTexture(OBJTextureDescriptor const& descriptor);
+    OBJTextureDescriptor const& getSpecularExponentTexture() const;
+
+    // Dissolve Texture
+
+    void setDissolveTexture(OBJTextureDescriptor const& descriptor);
+    OBJTextureDescriptor const& getDissolveTexture() const;
+
+    // Decal Texture
+
+    void setDecalTexture(OBJTextureDescriptor const& descriptor);
+    OBJTextureDescriptor const& getDecalTexture() const;
+
+    // Displacement Texture
+
+    void setDisplacementTexture(OBJTextureDescriptor const& descriptor);
+    OBJTextureDescriptor const& getDisplacementTexture() const;
+
+    // Bump Texture
+
+    void setBumpTexture(OBJTextureDescriptor const& descriptor);
+    OBJTextureDescriptor const& getBumpTexture() const;
+
+    // Anti-Aliasing
+
+    void setAntiAliasing(bool aa);
+    bool getAntiAliasing() const;
+
+    // Reflection Map
+
+    OBJReflectionMapType getReflectionMapType() const;
+
+    void setReflectionMapSphere(OBJTextureDescriptor const& descriptor);
+    OBJTextureDescriptor const& getReflectionMapSphere() const;
+
+    void setReflectionMapCubeSide(OBJReflectionMapCubeSide side, OBJTextureDescriptor const& descriptor);
+    OBJTextureDescriptor const& getReflectionMapCubeSide(OBJReflectionMapCubeSide side) const;
+
+protected:
+
+    //--------------------------------------------------------------------
     // Member Variables
-    //--------------------------------------------------------------------------------------
+    //--------------------------------------------------------------------
 
-    std::string name;
+    std::string m_Name;
 
     //--------------------------------------------------------------------
     // Color and Illumination
 
-    OBJMaterialProperty ambientReflectivity;
-    OBJMaterialProperty diffuseReflectivity;
-    OBJMaterialProperty specularReflectivity;
-    OBJMaterialProperty transmissionFilter;
+    OBJMaterialProperty m_AmbientReflectivity;
+    OBJMaterialProperty m_DiffuseReflectivity;
+    OBJMaterialProperty m_SpecularReflectivity;
+    OBJMaterialProperty m_TransmissionFilter;
 
-    OBJMaterialDissolve dissolve;
+    OBJMaterialDissolve m_Dissolve;
 
-    uint32_t illuminationModel;   ///< Value between 0 and 10 corresponding to an illumination model. See MTL specification for model details.
-    uint32_t specularExponent;    ///< Focus of the specular highlight. Higher values result in tighter highlights. Typical range (0 - 1000)
-    uint32_t sharpness;           ///< Sharpness of reflections. Higher values result in sharper reflections. Typical range of (0 - 1000); Default of 60
+    uint32_t m_IlluminationModel;   ///< Value between 0 and 10 corresponding to an illumination model. See MTL specification for model details.
+    uint32_t m_SpecularExponent;    ///< Focus of the specular highlight. Higher values result in tighter highlights. Typical range (0 - 1000)
+    uint32_t m_Sharpness;           ///< Sharpness of reflections. Higher values result in sharper reflections. Typical range of (0 - 1000); Default of 60
 
-    float opticalDensity;         ///< AKA index of refraction. Range (0.001 - 10.0). 1.0 indicates light does not bend as it passes through. Glass is 1.5
+    float m_OpticalDensity;         ///< AKA index of refraction. Range (0.001 - 10.0). 1.0 indicates light does not bend as it passes through. Glass is 1.5
 
     //--------------------------------------------------------------------
     // Texture Map
 
-    OBJTextureDescriptor textureAmbient;
-    OBJTextureDescriptor textureDiffuse;
-    OBJTextureDescriptor textureSpecular;
-    OBJTextureDescriptor textureSpecularExponent;
-    OBJTextureDescriptor textureDissolve;
-    OBJTextureDescriptor textureDecal;
-    OBJTextureDescriptor textureDisplacement;
-    OBJTextureDescriptor textureBump;
+    OBJTextureDescriptor m_TextureAmbient;
+    OBJTextureDescriptor m_TextureDiffuse;
+    OBJTextureDescriptor m_TextureSpecular;
+    OBJTextureDescriptor m_TextureSpecularExponent;
+    OBJTextureDescriptor m_TextureDissolve;
+    OBJTextureDescriptor m_TextureDecal;
+    OBJTextureDescriptor m_TextureDisplacement;
+    OBJTextureDescriptor m_TextureBump;
 
-    bool textureAntiAliasing;
+    bool m_TextureAntiAliasing;
 
     //--------------------------------------------------------------------
     // Reflection Map
 
-    OBJReflectionMapType reflectionMapType;
+    OBJReflectionMapType m_ReflectionMapType;
 
-    OBJReflectionMapSphere reflectionMapSphere;
-    OBJReflectionMapCube reflectionMapCube;
-
-protected:
+    OBJTextureDescriptor m_ReflectionMapSphere;
+    std::array<OBJTextureDescriptor, 8> m_ReflectionMapCube;
 
 private:
 };

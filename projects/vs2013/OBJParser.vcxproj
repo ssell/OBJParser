@@ -80,6 +80,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\main.cpp" />
     <ClCompile Include="..\..\src\OBJGrammar.cpp" />
+    <ClCompile Include="..\..\src\OBJMaterial.cpp" />
     <ClCompile Include="..\..\src\OBJParser.cpp" />
     <ClCompile Include="..\..\src\OBJState.cpp" />
     <ClCompile Include="..\..\src\OBJGroup.cpp" />
