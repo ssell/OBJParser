@@ -17,7 +17,7 @@
 #ifndef __H__OBJ_PARSER_MTL_MATERIAL__H__
 #define __H__OBJ_PARSER_MTL_MATERIAL__H__
 
-#include "OBJStructs.hpp"
+#include "OBJTextureDescriptor.hpp"
 
 #include <string>
 #include <cstdint>
@@ -25,20 +25,23 @@
 
 //------------------------------------------------------------------------------------------
 
+/**
+ * \enum OBJMaterialPropertyType
+ */
 enum class OBJMaterialPropertyType
 {
+    None = 0,
     RGB,     ///< Property is specified using RGB values
     XYZ,     ///< Property is specified using CIEXYZ values
     RFL      ///< Property is specified using a .rfl file
 };
 
+/**
+ * \struct OBJMaterialPropertyRFL
+ */
 struct OBJMaterialPropertyRFL
 {
-    OBJMaterialPropertyRFL()
-        : factor(1.0f)
-    {
-
-    }
+    OBJMaterialPropertyRFL();
 
     std::string path;
     float factor;
@@ -57,6 +60,11 @@ BOOST_FUSION_ADAPT_STRUCT(OBJMaterialPropertyRFL, (std::string, path), (float, f
  */
 struct OBJMaterialProperty
 {
+    OBJMaterialProperty();
+    OBJMaterialProperty const& operator=(OBJMaterialProperty const& rhs);
+
+    //--------------------------------------------------------------------
+
     OBJMaterialPropertyType type;
 
     union
@@ -76,15 +84,8 @@ struct OBJMaterialProperty
  */
 struct OBJMaterialDissolve
 {
-    OBJMaterialDissolve()
-        : halo(false),
-          factor(1.0f)
-    {
+    OBJMaterialDissolve();
 
-    }
-
-    //--------------------------------------------------------------------
-    
     bool halo;                    ///< True if dissolve depends on surface orientation relative to viewer
     float factor;                 ///< The amount the material dissolves. 0.0: fully dissolved, transparent; 1.0: opaque
 };
@@ -93,58 +94,9 @@ BOOST_FUSION_ADAPT_STRUCT(OBJMaterialDissolve, (bool, halo), (float, factor));
 
 //------------------------------------------------------------------------------------------
 
-enum class OBJTextureChannel
-{
-    None = 0,
-    Red,
-    Green,
-    Blue,
-    Matte,
-    Luminance,
-    Depth
-};
-
 /**
- * \struct OBJTextureDescriptor
- *
- * Generic descriptor for all mapped material textures.
- *
- * Note that not all fields are available for all texture types,
- * or that only a few may actually be in use.
+ * \enum OBJReflectionMapType
  */
-struct OBJTextureDescriptor
-{
-    OBJTextureDescriptor();
-    ~OBJTextureDescriptor();
-
-    OBJTextureDescriptor& operator=(OBJTextureDescriptor const& rhs);
-
-    //--------------------------------------------------------------------
-
-    bool blendU;                  ///< If true, enable texture blending along the horizontal axis. Default is true.
-    bool blendV;                  ///< If true, enable texture blending along the vertical axis. Default is true.
-    bool clamp;                   ///< If true, enable texture clamping. Default is false.
-    bool colorCorrection;         ///< If true, enable color correction. Only used on ambient, diffuse, and specular textures.
-
-    uint32_t resolution;          ///< Texture resolution. Default of 0 if no resolution specified.
-
-    float bumpMultiplier;         ///< Multiplier of values in bump textures only. Positive or negative. Typical range (0.0 - 1.0)
-    float boost;                  ///< Increases sharpness of mip-mapped textures. Positive only. Typical range (1.0 - 5.0)
-
-    float rangeModBase;           ///< Modifies texture values by adding a base value. Default is 0.0
-    float rangeModGain;           ///< Modifies texture values by increasing the contrast. Default is 1.0
-
-    OBJVector3 offset;            ///< Offsets the position of the texture on the surface via shifting. Default (0.0, 0.0, 0.0). (horiz, vert, depth).
-    OBJVector3 scale;             ///< Scales the values of the texture. Default (1.0, 1.0, 1.0). (horiz, vert, depth).
-    OBJVector3 turbulence;        ///< Applies turbulence to the texture. Default (0.0, 0.0, 0.0) for no turbulence.  (horiz, vert, depth).
-
-    OBJTextureChannel imfchan;    ///< Specifies the channel used to create a scalar or bump texture.
-
-    std::string path;             ///< Relative path (from material file) to texture source file. Includes file extension.
-};
-
-//------------------------------------------------------------------------------------------
-
 enum class OBJReflectionMapType
 {
     None = 0,
@@ -152,6 +104,9 @@ enum class OBJReflectionMapType
     Cube
 };
 
+/**
+ * \enum OBJReflectionMapCubeSide
+ */
 enum class OBJReflectionMapCubeSide
 {
     Front = 0,
@@ -220,7 +175,7 @@ public:
 
     // Illumination Model
 
-    void setIlluminationmodel(uint32_t model);
+    void setIlluminationModel(uint32_t model);
     uint32_t getIlluminationModel() const;
 
     // Specular Exponent

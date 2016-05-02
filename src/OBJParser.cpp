@@ -103,7 +103,6 @@ bool OBJParser::parseFileMemMap(std::string const& path)
         auto last = first + mappedFile.size();
 
         using Iterator = decltype(first);
-
         OBJGrammar<Iterator> grammar(&m_OBJState);
         OBJCommentSkipper<Iterator> skipper;
 
@@ -121,7 +120,24 @@ bool OBJParser::parseFileMemMap(std::string const& path)
     // Parse the MTL file (if any specified)
     //--------------------------------------------------------------------
 
-    
+    if(mappedFile.is_open())
+    {
+        auto first = mappedFile.const_data();
+        auto last = first + mappedFile.size();
+
+        using Iterator = decltype(first);
+        MTLGrammar<Iterator> grammar(&m_OBJState);
+        MTLCommentSkipper<Iterator> skipper;
+
+        result = qi::phrase_parse(first, last, grammar, skipper);
+
+        if(result)
+        {
+            result = (first == last);
+        }
+
+        mappedFile.close();
+    }
 
 #endif
 

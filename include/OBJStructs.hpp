@@ -32,9 +32,10 @@
 struct OBJVector2
 {
     OBJVector2() : x(0.0f), y(0.0f) { }
+    OBJVector2 const& operator=(OBJVector2 const& rhs) { x = rhs.x; y = rhs.y; return (*this); }
 
-    float x;
-    float y;
+    union { float x, r, u, s; };
+    union { float y, g, v, t; };
 };
 
 BOOST_FUSION_ADAPT_STRUCT(OBJVector2, (float, x), (float, y))
@@ -48,10 +49,11 @@ BOOST_FUSION_ADAPT_STRUCT(OBJVector2, (float, x), (float, y))
 struct OBJVector3
 {
     OBJVector3() : x(0.0f), y(0.0f), z(0.0f) { }
+    OBJVector3 const& operator=(OBJVector3 const& rhs) { x = rhs.x; y = rhs.y; z = rhs.z; return (*this); }
 
-    float x;
-    float y;
-    float z;
+    union { float x, r, u, s; };
+    union { float y, g, v, t; };
+    union { float z, b, p; };
 };
 
 BOOST_FUSION_ADAPT_STRUCT(OBJVector3, (float, x), (float, y), (float, z))
@@ -64,12 +66,12 @@ BOOST_FUSION_ADAPT_STRUCT(OBJVector3, (float, x), (float, y), (float, z))
  */
  struct OBJVector4
  {
-     OBJVector4() : x(0.0f), y(0.0f), z(0.0f), w(1.0f) { }
+    OBJVector4() : x(0.0f), y(0.0f), z(0.0f), w(1.0f) { }
 
-     float x;
-     float y;
-     float z;
-     float w;
+    union { float x, r, u, s; };
+    union { float y, g, v, t; };
+    union { float z, b, p; };
+    union { float w, a, q; };
  };
 
 BOOST_FUSION_ADAPT_STRUCT(OBJVector4, (float, x), (float, y), (float, z), (float, w))

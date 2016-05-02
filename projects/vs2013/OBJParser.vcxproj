@@ -84,9 +84,11 @@
     <ClCompile Include="..\..\src\OBJParser.cpp" />
     <ClCompile Include="..\..\src\OBJState.cpp" />
     <ClCompile Include="..\..\src\OBJGroup.cpp" />
+    <ClCompile Include="..\..\src\OBJTextureDescriptor.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\MTLGrammar.hpp" />
+    <ClInclude Include="..\..\include\MTLGrammarSkipper.hpp" />
     <ClInclude Include="..\..\include\OBJAuxillary.hpp" />
     <ClInclude Include="..\..\include\OBJGrammar.hpp" />
     <ClInclude Include="..\..\include\OBJGrammarSkipper.hpp" />
@@ -95,6 +97,7 @@
     <ClInclude Include="..\..\include\OBJParser.hpp" />
     <ClInclude Include="..\..\include\OBJState.hpp" />
     <ClInclude Include="..\..\include\OBJStructs.hpp" />
+    <ClInclude Include="..\..\include\OBJTextureDescriptor.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

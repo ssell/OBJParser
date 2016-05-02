@@ -17,59 +17,56 @@
 #include "OBJMaterial.hpp"
 
 //------------------------------------------------------------------------------------------
-// OBJTextureDescriptor
+// OBJMaterialPropertyRFL
 //------------------------------------------------------------------------------------------
 
-OBJTextureDescriptor::OBJTextureDescriptor()
-    : blendU(true),
-      blendV(true), 
-      clamp(false),
-      colorCorrection(false),
-      resolution(0),
-      bumpMultiplier(1.0f),
-      boost(1.0f),
-      rangeModBase(0.0f),
-      rangeModGain(1.0f),
-      imfchan(OBJTextureChannel::None)
+OBJMaterialPropertyRFL::OBJMaterialPropertyRFL()
+    : factor(1.0f)
 {
 
 }
 
-OBJTextureDescriptor::~OBJTextureDescriptor()
+//------------------------------------------------------------------------------------------
+// OBJMaterialProperty
+//------------------------------------------------------------------------------------------
+
+OBJMaterialProperty::OBJMaterialProperty()
+    : type(OBJMaterialPropertyType::None),
+      r(0.0f),
+      g(0.0f),
+      b(0.0f)
 {
 
 }
 
-OBJTextureDescriptor& OBJTextureDescriptor::operator=(OBJTextureDescriptor const& rhs)
+OBJMaterialProperty const& OBJMaterialProperty::operator=(OBJMaterialProperty const& rhs)
 {
-    blendU = rhs.blendU;
-    blendV = rhs.blendV;
-    clamp = rhs.clamp;
-    colorCorrection = rhs.colorCorrection;
-    resolution = rhs.resolution;
-    bumpMultiplier = rhs.bumpMultiplier;
-    boost = rhs.boost;
-    rangeModBase = rhs.rangeModBase;
-    rangeModGain = rhs.rangeModGain;
-    offset = rhs.offset;
-    scale = rhs.scale;
-    turbulence = rhs.turbulence;
-    imfchan = rhs.imfchan;
-    path = rhs.path;
+    type = rhs.type;
+    r = rhs.r;
+    g = rhs.g;
+    b = rhs.b;
+    rfl = rhs.rfl;
 
     return (*this);
 }
 
 //------------------------------------------------------------------------------------------
-// OBJMaterial
+// OBJMaterialDissolve
 //------------------------------------------------------------------------------------------
+
+OBJMaterialDissolve::OBJMaterialDissolve()
+    : halo(false),
+      factor(1.0f)
+{
+
+}
 
 //------------------------------------------------------------------------------------------
 // Constructors
 //------------------------------------------------------------------------------------------
 
 OBJMaterial::OBJMaterial()
-    : m_Name("OBJ Material"),
+    : m_Name(""),
       m_IlluminationModel(1),
       m_SpecularExponent(1),
       m_Sharpness(60),
@@ -246,7 +243,7 @@ OBJMaterialDissolve const& OBJMaterial::getDissolve() const
 // Illumination Model
 //------------------------------------------------------------------------
 
-void OBJMaterial::setIlluminationmodel(uint32_t model)
+void OBJMaterial::setIlluminationModel(uint32_t model)
 {
     m_IlluminationModel = model;
 }

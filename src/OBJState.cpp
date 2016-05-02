@@ -247,6 +247,16 @@ void OBJState::setMaterial(std::string const& name)
     m_AuxiliaryStates.emplace_back(auxState);
 }
 
+void OBJState::setMaterial(std::string const& name, OBJMaterial const& material)
+{
+    auto find = m_MaterialMap.find(name);
+
+    if(find != m_MaterialMap.end())
+    {
+        m_MaterialMap[name] = material;
+    }
+}
+
 void OBJState::addMaterialLibrary(std::string const& path)
 {
     m_MaterialLibraries.push_back(path);

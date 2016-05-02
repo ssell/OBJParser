@@ -235,6 +235,16 @@ public:
      * \param[in] name
      */
     void setMaterial(std::string const& name);
+
+    /**
+     * Sets the material data for the specified material name.
+     *
+     * \note Typically should only be used by the MTLGrammar class.
+     *
+     * \param[in] name
+     * \param[in] material
+     */
+    void setMaterial(std::string const& name, OBJMaterial const& material);
     
     /**
      * Adds a new material library to create materials from.
@@ -280,12 +290,6 @@ public:
      * \param[in] name
      */
     void setTracingObject(std::string const& name);
-
-    //--------------------------------------------------------------------
-    // MTL Parser/Grammar Methods
-    //--------------------------------------------------------------------
-
-
 
 protected:
 
