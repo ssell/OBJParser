@@ -55,11 +55,11 @@ public:
         setupTextureMapRules();
         setupReflectionMapRules();
 
-        ruleStart = (ruleNewMaterial |
-                     ruleColorIllumination |
-                     ruleTextureMap |
-                     ruleReflectionMap |
-                     qi::eoi [boost::phoenix::bind(&MTLGrammar::finishCurrentMaterial, this)]);
+        ruleStart = +(ruleNewMaterial |
+                      ruleColorIllumination |
+                      ruleTextureMap |
+                      ruleReflectionMap |
+                      qi::eol);
     }
 
     void resetCurrentTexture()
@@ -240,8 +240,8 @@ protected:
             qi::uint_ [boost::phoenix::bind(&OBJMaterial::setSharpness, &m_CurrentMaterial, qi::_1)];
 
         ruleOpticalDensity =
-            qi::lit("optical_density") >>
-            qi::float_[boost::phoenix::bind(&OBJMaterial::setOpticalDensity, &m_CurrentMaterial, qi::_1)];
+            qi::lit("Ni") >>
+            qi::float_ [boost::phoenix::bind(&OBJMaterial::setOpticalDensity, &m_CurrentMaterial, qi::_1)];
 
         //----------------------------------------------------------------
 

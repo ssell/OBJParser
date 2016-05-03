@@ -42,7 +42,7 @@ OBJParser::~OBJParser()
 // Public Methods
 //------------------------------------------------------------------------------------------
 
-bool OBJParser::parseString(std::string const& str)
+bool OBJParser::parseOBJString(std::string const& str)
 {
     using Iterator = decltype(str.begin());
     
@@ -54,16 +54,16 @@ bool OBJParser::parseString(std::string const& str)
     return qi::phrase_parse(str.begin(), str.end(), grammar, skipper);
 }
 
-bool OBJParser::parseFile(std::string const& path)
+bool OBJParser::parseOBJFile(std::string const& path)
 {
     bool result = false;
 
     m_OBJState.clearState();
 
 #ifdef OBJ_PARSER_USE_MEM_MAP
-    result = parseFileMemMap(path);
+    result = parseOBJFileMemMap(path);
 #else
-    result = parseFilefstream(path);
+    result = parseOBJFilefstream(path);
 #endif
 
     return result;
@@ -78,14 +78,14 @@ OBJState* OBJParser::getOBJState()
 // Protected Methods
 //------------------------------------------------------------------------------------------
 
-bool OBJParser::parseFilefstream(std::string const& path)
+bool OBJParser::parseOBJFilefstream(std::string const& path)
 {
     bool result = false;
 
     return result;
 }
 
-bool OBJParser::parseFileMemMap(std::string const& path)
+bool OBJParser::parseOBJFileMemMap(std::string const& path)
 {
     bool result = false;
 
@@ -120,6 +120,31 @@ bool OBJParser::parseFileMemMap(std::string const& path)
     // Parse the MTL file (if any specified)
     //--------------------------------------------------------------------
 
+    if(result)
+    {
+        auto materialLibraries = m_OBJState.getMaterialLibraries();
+
+        for(auto mtlPath : *materialLibraries)
+        {
+            if(!parseMTLFileMemMap(buildRelativeMTLPath(path, mtlPath)))
+            {
+                result = false;
+            }
+        }
+    }
+#endif
+
+    return result;
+}
+
+bool OBJParser::parseMTLFileMemMap(std::string const& path)
+{
+    bool result = false;
+
+#ifdef OBJ_PARSER_USE_MEM_MAP
+
+    boost::iostreams::mapped_file mappedFile(path, boost::iostreams::mapped_file::readonly);
+
     if(mappedFile.is_open())
     {
         auto first = mappedFile.const_data();
@@ -133,13 +158,41 @@ bool OBJParser::parseFileMemMap(std::string const& path)
 
         if(result)
         {
-            result = (first == last);
+            grammar.finishCurrentMaterial();
         }
 
         mappedFile.close();
     }
 
 #endif
+
+    return result;
+}
+
+std::string OBJParser::buildRelativeMTLPath(std::string const& objPath, std::string const& mtlPath)
+{
+    auto find = objPath.find_last_of('/');
+
+    if(find != std::string::npos)
+    {
+        find += 1;
+    }
+    else
+    {
+        find = objPath.find_last_of('\\');
+
+        if(find != std::string::npos)
+        {
+            find += 1;
+        }
+        else
+        {
+            find = objPath.size();
+        }
+    }
+
+    const std::string objDir = objPath.substr(0, find);
+    const std::string result = objDir + mtlPath;
 
     return result;
 }

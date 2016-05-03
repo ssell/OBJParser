@@ -43,16 +43,23 @@ public:
     OBJParser();
     ~OBJParser();
 
-    bool parseString(std::string const& str);
-    bool parseFile(std::string const& path);
+    bool parseOBJString(std::string const& str);
+    bool parseOBJFile(std::string const& path);
+
+    bool parseMTLFile(std::string const& path);
 
     OBJState* getOBJState();
 
 protected:
 
-    bool parseFilefstream(std::string const& path);
-    bool parseFileMemMap(std::string const& path);
+    bool parseOBJFilefstream(std::string const& path);
+    bool parseOBJFileMemMap(std::string const& path);
    
+    bool parseMTLFilefstream(std::string const& path);
+    bool parseMTLFileMemMap(std::string const& path);
+
+    std::string buildRelativeMTLPath(std::string const& objPath, std::string const& mtlPath);
+
     OBJState m_OBJState;
 
 private:

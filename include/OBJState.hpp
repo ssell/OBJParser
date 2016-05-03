@@ -107,6 +107,11 @@ public:
      */
     std::vector<OBJVector3> const* getNormalData() const;
 
+    /**
+     * Returns a pointer to the container of all material libraries (accompanying .mtl files).
+     */
+    std::vector<std::string> const* getMaterialLibraries() const;
+
     //--------------------------------------------------------------------
     // OBJ Parser/Grammar Methods
     //--------------------------------------------------------------------

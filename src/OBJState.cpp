@@ -98,6 +98,11 @@ std::vector<OBJVector3> const* OBJState::getNormalData() const
     return &m_VertexNormalData;
 }
 
+std::vector<std::string> const* OBJState::getMaterialLibraries() const
+{
+    return &m_MaterialLibraries;
+}
+
 void OBJState::clearActiveGroups()
 {
     for(auto iter = m_ActiveGroups.begin(); iter != m_ActiveGroups.end(); ++iter)
@@ -249,9 +254,7 @@ void OBJState::setMaterial(std::string const& name)
 
 void OBJState::setMaterial(std::string const& name, OBJMaterial const& material)
 {
-    auto find = m_MaterialMap.find(name);
-
-    if(find != m_MaterialMap.end())
+    if(!name.empty())
     {
         m_MaterialMap[name] = material;
     }

@@ -29,10 +29,10 @@ int main(int argc, char** argv)
 
     //--------------------------------------------------------------------
 
-    const std::string path = "test/hairball.obj";
+    const std::string path = "test/testcube.obj";
 
     auto start = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-    const bool result = parser.parseFile(path);
+    const bool result = parser.parseOBJFile(path);
     auto end = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
     const auto elapsed = end - start;
