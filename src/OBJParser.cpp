@@ -29,6 +29,7 @@
 //------------------------------------------------------------------------------------------
 
 OBJParser::OBJParser()
+    : m_LastError("No Error")
 {
 
 }
@@ -42,8 +43,10 @@ OBJParser::~OBJParser()
 // Public Methods
 //------------------------------------------------------------------------------------------
 
-bool OBJParser::parseOBJString(std::string const& str)
+OBJParser::Result OBJParser::parseOBJString(std::string const& str)
 {
+    OBJParser::Result result = OBJParser::Result::Success;
+
     using Iterator = decltype(str.begin());
     
     m_OBJState.clearState();
@@ -51,12 +54,17 @@ bool OBJParser::parseOBJString(std::string const& str)
     OBJGrammar<Iterator> grammar(&m_OBJState);
     OBJCommentSkipper<Iterator> skipper;
 
-    return qi::phrase_parse(str.begin(), str.end(), grammar, skipper);
+    if(!qi::phrase_parse(str.begin(), str.end(), grammar, skipper))
+    {
+        result = OBJParser::Result::FailedOBJParseError;
+    }
+
+    return result;
 }
 
-bool OBJParser::parseOBJFile(std::string const& path)
+OBJParser::Result OBJParser::parseOBJFile(std::string const& path)
 {
-    bool result = false;
+    OBJParser::Result result = OBJParser::Result::Success;
 
     m_OBJState.clearState();
 
@@ -74,20 +82,25 @@ OBJState* OBJParser::getOBJState()
     return &m_OBJState;
 }
 
+std::string const& OBJParser::getLastError() const
+{
+    return m_LastError;
+}
+
 //------------------------------------------------------------------------------------------
 // Protected Methods
 //------------------------------------------------------------------------------------------
 
-bool OBJParser::parseOBJFilefstream(std::string const& path)
+OBJParser::Result OBJParser::parseOBJFilefstream(std::string const& path)
 {
-    bool result = false;
+    OBJParser::Result result = OBJParser::Result::Success;
 
     return result;
 }
 
-bool OBJParser::parseOBJFileMemMap(std::string const& path)
+OBJParser::Result OBJParser::parseOBJFileMemMap(std::string const& path)
 {
-    bool result = false;
+    OBJParser::Result result = OBJParser::Result::Success;
 
 #ifdef OBJ_PARSER_USE_MEM_MAP
 
@@ -106,29 +119,43 @@ bool OBJParser::parseOBJFileMemMap(std::string const& path)
         OBJGrammar<Iterator> grammar(&m_OBJState);
         OBJCommentSkipper<Iterator> skipper;
 
-        result = qi::phrase_parse(first, last, grammar, skipper);
-
-        if(result)
+        if(qi::phrase_parse(first, last, grammar, skipper))
         {
-            result = (first == last);
+            if(first != last)
+            {
+                result = OBJParser::Result::FailedOBJParseError;
+                m_LastError = "Failed to parse line '" + extractLastLine(first) + "' in file '" + path + "'";
+            }
+        }
+        else
+        {
+            result = OBJParser::Result::FailedOBJParseError;
+            m_LastError = "Failed to parse line '" + extractLastLine(first) + "' in file '" + path + "'";
         }
 
         mappedFile.close();
+    }
+    else
+    {
+        result = OBJParser::Result::FailedOBJFileRead;
+        m_LastError = "Failed to open file '" + path + "'";
     }
 
     //--------------------------------------------------------------------
     // Parse the MTL file (if any specified)
     //--------------------------------------------------------------------
 
-    if(result)
+    if(result == OBJParser::Result::Success)
     {
         auto materialLibraries = m_OBJState.getMaterialLibraries();
 
         for(auto mtlPath : *materialLibraries)
         {
-            if(!parseMTLFileMemMap(buildRelativeMTLPath(path, mtlPath)))
+            result = parseMTLFileMemMap(buildRelativeMTLPath(path, mtlPath));
+
+            if(result != OBJParser::Result::Success)
             {
-                result = false;
+                break;
             }
         }
     }
@@ -137,9 +164,9 @@ bool OBJParser::parseOBJFileMemMap(std::string const& path)
     return result;
 }
 
-bool OBJParser::parseMTLFileMemMap(std::string const& path)
+OBJParser::Result OBJParser::parseMTLFileMemMap(std::string const& path)
 {
-    bool result = false;
+    OBJParser::Result result = OBJParser::Result::Success;
 
 #ifdef OBJ_PARSER_USE_MEM_MAP
 
@@ -154,14 +181,30 @@ bool OBJParser::parseMTLFileMemMap(std::string const& path)
         MTLGrammar<Iterator> grammar(&m_OBJState);
         MTLCommentSkipper<Iterator> skipper;
 
-        result = qi::phrase_parse(first, last, grammar, skipper);
-
-        if(result)
+        if(qi::phrase_parse(first, last, grammar, skipper))
         {
-            grammar.finishCurrentMaterial();
+            if(first == last)
+            {
+                grammar.finishCurrentMaterial();
+            }
+            else
+            {
+                result = OBJParser::Result::FailedOBJParseError;
+                m_LastError = "Failed to parse line '" + extractLastLine(first) + "' in file '" + path + "'";
+            }
+        }
+        else
+        {
+            result = OBJParser::Result::FailedOBJParseError;
+            m_LastError = "Failed to parse line '" + extractLastLine(first) + "' in file '" + path + "'";
         }
 
         mappedFile.close();
+    }
+    else
+    {
+        result = OBJParser::Result::FailedMTLFileRead;
+        m_LastError = "Failed to open file '" + path + "'";
     }
 
 #endif
@@ -193,6 +236,20 @@ std::string OBJParser::buildRelativeMTLPath(std::string const& objPath, std::str
 
     const std::string objDir = objPath.substr(0, find);
     const std::string result = objDir + mtlPath;
+
+    return result;
+}
+
+std::string OBJParser::extractLastLine(const char* str)
+{
+    std::string result = str;
+    auto find = result.find_first_of('\n');
+
+    if(find != std::string::npos)
+    {
+        result = result.substr(0, find);
+        result.erase(std::remove(result.begin(), result.end(), '\r'), result.end());
+    }
 
     return result;
 }

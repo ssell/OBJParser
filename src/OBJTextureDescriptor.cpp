@@ -180,9 +180,37 @@ OBJVector3 const& OBJTextureDescriptor::getTurbulence() const
     return m_Turbulence;
 }
 
-void OBJTextureDescriptor::setimfchan(OBJTextureChannel const channel)
+void OBJTextureDescriptor::setimfchan(char const channel)
 {
-    m_imfchan = channel;
+    switch(channel)
+    {
+    case 'r':
+        m_imfchan = OBJTextureChannel::Red;
+        break;
+
+    case 'g':
+        m_imfchan = OBJTextureChannel::Green;
+        break;
+
+    case 'b':
+        m_imfchan = OBJTextureChannel::Blue;
+        break;
+
+    case 'm':
+        m_imfchan = OBJTextureChannel::Matte;
+        break;
+
+    case 'l':
+        m_imfchan = OBJTextureChannel::Luminance;
+        break;
+
+    case 'z':
+        m_imfchan = OBJTextureChannel::Depth;
+        break;
+
+    default:
+        break;
+    }
 }
 
 OBJTextureChannel OBJTextureDescriptor::getimfchan() const

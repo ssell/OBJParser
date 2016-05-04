@@ -24,8 +24,7 @@
 //------------------------------------------------------------------------------------------
 
 // If defined, the parser will use boost memory mapped files for loading files.
-// This may drastically speed up file I/O but requires both the Boost System and IOStream library dependencies.
-// System is used to calculate the needed memory for the mapping, while IOStream contains the memory map implementation.
+// This may drastically speed up file I/O but requires IOStream library dependency.
 
 #define OBJ_PARSER_USE_MEM_MAP
 
@@ -35,32 +34,104 @@
 
 /**
  * \class OBJParser
+ *
+ * Parser for OBJ and MTL format files.
+ *
+ * If OBJ_PARSER_USE_MEM_MAP is defined, then files will be read in using memory-mapped files. <br/>
+ * Otherwise, files will be read in using the standard filestream.
+ *
+ * Upon parsing, the resulting OBJ and MTL data is stored within the internal OBJState object.
+ * This state is automatically cleared prior to any parsing actions.
  */
 class OBJParser
 {
 public:
 
+    /**
+     * \enum Result
+     */
+    enum class Result
+    {
+        Success = 0,              ///< No errors encountered during parsing
+        FailedOBJFileRead,        ///< Failed to open and/or read OBJ file
+        FailedOBJParseError,      ///< Error encountered during OBJ parsing, see getLastError
+        FailedMTLFileRead,        ///< Failed to open and/or read MTL file
+        FailedMTLParseError       ///< Error encountered during MTL parsing, see getLastError
+    };
+
+    //--------------------------------------------------------------------
+
     OBJParser();
     ~OBJParser();
 
-    bool parseOBJString(std::string const& str);
-    bool parseOBJFile(std::string const& path);
+    //--------------------------------------------------------------------
 
-    bool parseMTLFile(std::string const& path);
+    /**
+     * Attempts to parse an OBJ formatted string.
+     *
+     * If successful, resulting OBJ data will be stored in the member OBJState
+     * object which may be accessed via getOBJState().
+     *
+     * If failed getLastError() may be used to for additional information.
+     *
+     * \param[in] str OBJ formatted string to parse
+     * \return 
+     */
+    Result parseOBJString(std::string const& str);
 
+    /**
+     * Attempts to parse an OBJ formatted file.
+     *
+     * If successful, resulting OBJ data will be stored in the member OBJState
+     * object which may be accessed via getOBJState().
+     *
+     * If failed getLastError() may be used to for additional information.
+     *
+     * \param[in] path Relative path to the OBJ file.
+     * \return 
+     */
+    Result parseOBJFile(std::string const& path);
+
+    /**
+     * Attempts to parse a MTL formatted file.
+     *
+     * If successful, resulting materials will be stored in the member OBJState
+     * object which may be accessed via getOBJState().
+     *
+     * If failed getLastError() may be used to for additional information.
+     *
+     * \param[in] path Relative path to the MTL file.
+     * \return 
+     */
+    Result parseMTLFile(std::string const& path);
+
+    /**
+     * Returns a pointer to the internal OBJState object.
+     * \note This state is cleared during each parse call (pointer remains valid).
+     */
     OBJState* getOBJState();
+
+    /**
+     * \return Human-readable string description of last error encountered.
+     */
+    std::string const& getLastError() const;
 
 protected:
 
-    bool parseOBJFilefstream(std::string const& path);
-    bool parseOBJFileMemMap(std::string const& path);
+    Result parseOBJFilefstream(std::string const& path);
+    Result parseOBJFileMemMap(std::string const& path);
    
-    bool parseMTLFilefstream(std::string const& path);
-    bool parseMTLFileMemMap(std::string const& path);
+    Result parseMTLFilefstream(std::string const& path);
+    Result parseMTLFileMemMap(std::string const& path);
 
     std::string buildRelativeMTLPath(std::string const& objPath, std::string const& mtlPath);
+    std::string extractLastLine(const char* str);
 
-    OBJState m_OBJState;
+    //--------------------------------------------------------------------
+
+    OBJState m_OBJState;          ///< Internal OBJ state
+
+    std::string m_LastError;      ///< String representation of last error
 
 private:
 };

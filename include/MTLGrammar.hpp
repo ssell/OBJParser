@@ -85,7 +85,8 @@ protected:
 
     void setupGeneralRules()
     {
-        ruleString = *(qi::char_ - qi::space);
+        ruleString = +(qi::char_ - qi::space);
+        ruleStringNoSkip = qi::lexeme[+(qi::graph)];
 
         ruleVector2Data = 
             qi::float_ >> 
@@ -118,7 +119,7 @@ protected:
     void setupColorIlluminationRules()
     {
         ruleRFL =
-            ruleString >>
+            ruleStringNoSkip >>
             (qi::float_ | qi::attr(1.0f));
 
         //----------------------------------------------------------------
@@ -181,6 +182,27 @@ protected:
             (ruleSpecularRGB | 
              ruleSpecularSpectral | 
              ruleSpecularXYZ);
+        
+        //----------------------------------------------------------------
+        // Emissive Color
+        //----------------------------------------------------------------
+
+        ruleEmissiveRGB = 
+            ruleVector3Data [boost::phoenix::bind(&OBJMaterial::setEmissiveReflectivityRGB, &m_CurrentMaterial, qi::_1)];
+
+        ruleEmissiveSpectral =
+            qi::lit("spectral") >>
+            ruleRFL [boost::phoenix::bind(&OBJMaterial::setEmissiveReflectivityRFL, &m_CurrentMaterial, qi::_1)];
+
+        ruleEmissiveXYZ =
+            qi::lit("xyz") >>
+            ruleVector3Data [boost::phoenix::bind(&OBJMaterial::setEmissiveReflectivityXYZ, &m_CurrentMaterial, qi::_1)];
+
+        ruleEmissive = 
+            qi::lit("Ke") >> 
+            (ruleEmissiveRGB | 
+             ruleEmissiveSpectral | 
+             ruleEmissiveXYZ);
 
         //----------------------------------------------------------------
         // Transmission Filter
@@ -233,7 +255,7 @@ protected:
 
         ruleSpecularExponent =
             qi::lit("Ns") >>
-            qi::uint_ [boost::phoenix::bind(&OBJMaterial::setSpecularExponent, &m_CurrentMaterial, qi::_1)];
+            qi::float_ [boost::phoenix::bind(&OBJMaterial::setSpecularExponent, &m_CurrentMaterial, qi::_1)];
 
         ruleSharpness =
             qi::lit("sharpness") >>
@@ -249,6 +271,7 @@ protected:
             (ruleAmbient | 
              ruleDiffuse | 
              ruleSpecular | 
+             ruleEmissive |
              ruleTransmission | 
              ruleIllumination |
              ruleDissolve |
@@ -268,40 +291,44 @@ protected:
 
         ruleTextureMapBody =
             ruleTextureFlags >>
-            ruleString >>
+            ruleStringNoSkip [boost::phoenix::bind(&OBJTextureDescriptor::setPath, &m_CurrentTexture, qi::_1)] >>
             qi::eol;
 
         ruleTextureMapAmbient =
-            qi::lit("map_Ka") [boost::phoenix::bind(&MTLGrammar::resetCurrentTexture, this)] >>
-            ruleTextureMapBody [boost::phoenix::bind(&OBJMaterial::setAmbientTexture, &m_CurrentMaterial, m_CurrentTexture)];
+            qi::lit("map_Ka")  >>
+            ruleTextureMapBody [boost::phoenix::bind(&OBJMaterial::setAmbientTexture, &m_CurrentMaterial, &m_CurrentTexture)];
 
         ruleTextureMapDiffuse =
             qi::lit("map_Kd") [boost::phoenix::bind(&MTLGrammar::resetCurrentTexture, this)] >>
-            ruleTextureMapBody [boost::phoenix::bind(&OBJMaterial::setDiffuseTexture, &m_CurrentMaterial, m_CurrentTexture)];
+            ruleTextureMapBody [boost::phoenix::bind(&OBJMaterial::setDiffuseTexture, &m_CurrentMaterial, &m_CurrentTexture)];
 
         ruleTextureMapSpecular =
             qi::lit("map_Ks") [boost::phoenix::bind(&MTLGrammar::resetCurrentTexture, this)] >>
-            ruleTextureMapBody [boost::phoenix::bind(&OBJMaterial::setSpecularTexture, &m_CurrentMaterial, m_CurrentTexture)];
+            ruleTextureMapBody [boost::phoenix::bind(&OBJMaterial::setSpecularTexture, &m_CurrentMaterial, &m_CurrentTexture)];
 
         ruleTextureMapSpecularExponent =
             qi::lit("map_Ns") [boost::phoenix::bind(&MTLGrammar::resetCurrentTexture, this)] >>
-            ruleTextureMapBody [boost::phoenix::bind(&OBJMaterial::setSpecularExponentTexture, &m_CurrentMaterial, m_CurrentTexture)];
+            ruleTextureMapBody [boost::phoenix::bind(&OBJMaterial::setSpecularExponentTexture, &m_CurrentMaterial, &m_CurrentTexture)];
+
+        ruleTextureMapEmissive =
+            qi::lit("map_Ke") [boost::phoenix::bind(&MTLGrammar::resetCurrentTexture, this)] >>
+            ruleTextureMapBody [boost::phoenix::bind(&OBJMaterial::setEmissiveTexture, &m_CurrentMaterial, &m_CurrentTexture)];
 
         ruleTextureMapDissolve =
             qi::lit("map_d") [boost::phoenix::bind(&MTLGrammar::resetCurrentTexture, this)] >>
-            ruleTextureMapBody [boost::phoenix::bind(&OBJMaterial::setDissolveTexture, &m_CurrentMaterial, m_CurrentTexture)];
+            ruleTextureMapBody [boost::phoenix::bind(&OBJMaterial::setDissolveTexture, &m_CurrentMaterial, &m_CurrentTexture)];
 
         ruleTextureMapDecal =
             qi::lit("decal") [boost::phoenix::bind(&MTLGrammar::resetCurrentTexture, this)] >>
-            ruleTextureMapBody [boost::phoenix::bind(&OBJMaterial::setDecalTexture, &m_CurrentMaterial, m_CurrentTexture)];
+            ruleTextureMapBody [boost::phoenix::bind(&OBJMaterial::setDecalTexture, &m_CurrentMaterial, &m_CurrentTexture)];
 
         ruleTextureMapDisplacement =
             qi::lit("disp") [boost::phoenix::bind(&MTLGrammar::resetCurrentTexture, this)] >>
-            ruleTextureMapBody [boost::phoenix::bind(&OBJMaterial::setDisplacementTexture, &m_CurrentMaterial, m_CurrentTexture)];
+            ruleTextureMapBody [boost::phoenix::bind(&OBJMaterial::setDisplacementTexture, &m_CurrentMaterial, &m_CurrentTexture)];
 
         ruleTextureMapBump =
             qi::lit("bump") [boost::phoenix::bind(&MTLGrammar::resetCurrentTexture, this)] >>
-            ruleTextureMapBody [boost::phoenix::bind(&OBJMaterial::setBumpTexture, &m_CurrentMaterial, m_CurrentTexture)];
+            ruleTextureMapBody [boost::phoenix::bind(&OBJMaterial::setBumpTexture, &m_CurrentMaterial, &m_CurrentTexture)];
 
         //----------------------------------------------------------------
         // Anti-Aliasing
@@ -319,6 +346,7 @@ protected:
              ruleTextureMapDiffuse |
              ruleTextureMapSpecular |
              ruleTextureMapSpecularExponent |
+             ruleTextureMapEmissive |
              ruleTextureMapDissolve |
              ruleTextureMapDecal |
              ruleTextureMapDisplacement |
@@ -384,6 +412,11 @@ protected:
             qi::omit[qi::lit("-boost")] >>
             qi::float_ [boost::phoenix::bind(&OBJTextureDescriptor::setBoost, &m_CurrentTexture, qi::_1)];
 
+        ruleTextureFlagimfchan =
+            qi::omit[qi::lit("-imfchan")] >>
+            (qi::graph)[boost::phoenix::bind(&OBJTextureDescriptor::setimfchan, &m_CurrentTexture, qi::_1)];
+
+
         //----------------------------------------------------------------
 
         ruleTextureFlags = 
@@ -397,38 +430,39 @@ protected:
               ruleTextureFlagRangeMod |
               ruleTextureFlagResolution |
               ruleTextureFlagBumpMultiplier |
-              ruleTextureFlagBoost);
+              ruleTextureFlagBoost |
+              ruleTextureFlagimfchan);
     }
 
     void setupReflectionMapRules()
     {
         ruleReflectionMapSphere =
             qi::lit("refl -type sphere") [boost::phoenix::bind(&MTLGrammar::resetCurrentTexture, this)] >>
-            ruleTextureMapBody [boost::phoenix::bind(&OBJMaterial::setReflectionMapSphere, &m_CurrentMaterial, m_CurrentTexture)];
+            ruleTextureMapBody [boost::phoenix::bind(&OBJMaterial::setReflectionMapSphere, &m_CurrentMaterial, &m_CurrentTexture)];
 
         ruleReflectionMapCubeTop =
             qi::lit("refl -type cube_top") [boost::phoenix::bind(&MTLGrammar::resetCurrentTexture, this)] >>
-            ruleTextureMapBody [boost::phoenix::bind(&OBJMaterial::setReflectionMapCubeSide, &m_CurrentMaterial, OBJReflectionMapCubeSide::Top, m_CurrentTexture)];
+            ruleTextureMapBody [boost::phoenix::bind(&OBJMaterial::setReflectionMapCubeSide, &m_CurrentMaterial, OBJReflectionMapCubeSide::Top, &m_CurrentTexture)];
 
         ruleReflectionMapCubeBottom =
             qi::lit("refl -type cube_bottom") [boost::phoenix::bind(&MTLGrammar::resetCurrentTexture, this)] >>
-            ruleTextureMapBody [boost::phoenix::bind(&OBJMaterial::setReflectionMapCubeSide, &m_CurrentMaterial, OBJReflectionMapCubeSide::Bottom, m_CurrentTexture)];
+            ruleTextureMapBody [boost::phoenix::bind(&OBJMaterial::setReflectionMapCubeSide, &m_CurrentMaterial, OBJReflectionMapCubeSide::Bottom, &m_CurrentTexture)];
 
         ruleReflectionMapCubeFront =
             qi::lit("refl -type cube_front") [boost::phoenix::bind(&MTLGrammar::resetCurrentTexture, this)] >>
-            ruleTextureMapBody [boost::phoenix::bind(&OBJMaterial::setReflectionMapCubeSide, &m_CurrentMaterial, OBJReflectionMapCubeSide::Front, m_CurrentTexture)];
+            ruleTextureMapBody [boost::phoenix::bind(&OBJMaterial::setReflectionMapCubeSide, &m_CurrentMaterial, OBJReflectionMapCubeSide::Front, &m_CurrentTexture)];
 
         ruleReflectionMapCubeBack =
             qi::lit("refl -type cube_back") [boost::phoenix::bind(&MTLGrammar::resetCurrentTexture, this)] >>
-            ruleTextureMapBody [boost::phoenix::bind(&OBJMaterial::setReflectionMapCubeSide, &m_CurrentMaterial, OBJReflectionMapCubeSide::Back, m_CurrentTexture)];
+            ruleTextureMapBody [boost::phoenix::bind(&OBJMaterial::setReflectionMapCubeSide, &m_CurrentMaterial, OBJReflectionMapCubeSide::Back, &m_CurrentTexture)];
 
         ruleReflectionMapCubeLeft =
             qi::lit("refl -type cube_left") [boost::phoenix::bind(&MTLGrammar::resetCurrentTexture, this)] >>
-            ruleTextureMapBody [boost::phoenix::bind(&OBJMaterial::setReflectionMapCubeSide, &m_CurrentMaterial, OBJReflectionMapCubeSide::Left, m_CurrentTexture)];
+            ruleTextureMapBody [boost::phoenix::bind(&OBJMaterial::setReflectionMapCubeSide, &m_CurrentMaterial, OBJReflectionMapCubeSide::Left, &m_CurrentTexture)];
 
         ruleReflectionMapCubeRight =
             qi::lit("refl -type cube_right") [boost::phoenix::bind(&MTLGrammar::resetCurrentTexture, this)] >>
-            ruleTextureMapBody [boost::phoenix::bind(&OBJMaterial::setReflectionMapCubeSide, &m_CurrentMaterial, OBJReflectionMapCubeSide::Right, m_CurrentTexture)];
+            ruleTextureMapBody [boost::phoenix::bind(&OBJMaterial::setReflectionMapCubeSide, &m_CurrentMaterial, OBJReflectionMapCubeSide::Right, &m_CurrentTexture)];
 
         ruleReflectionMap =
             (ruleReflectionMapSphere |
@@ -457,6 +491,7 @@ protected:
     // General Rules
 
     qi::rule<Iterator, std::string(), Skipper> ruleString;
+    qi::rule<Iterator, std::string(), Skipper> ruleStringNoSkip;
     qi::rule<Iterator, OBJVector2(), Skipper> ruleVector2Data;
     qi::rule<Iterator, OBJVector3(), Skipper> ruleVector3Data;
     qi::rule<Iterator, bool(), Skipper> ruleBoolOnOffTrue;           ///< Parses flag value "on" and "off". If none specified, returns TRUE by default
@@ -483,6 +518,11 @@ protected:
     qi::rule<Iterator, Skipper> ruleSpecularSpectral;
     qi::rule<Iterator, Skipper> ruleSpecularXYZ;
     qi::rule<Iterator, Skipper> ruleSpecular;
+
+    qi::rule<Iterator, Skipper> ruleEmissiveRGB;
+    qi::rule<Iterator, Skipper> ruleEmissiveSpectral;
+    qi::rule<Iterator, Skipper> ruleEmissiveXYZ;
+    qi::rule<Iterator, Skipper> ruleEmissive;
 
     qi::rule<Iterator, Skipper> ruleTransmissionRGB;
     qi::rule<Iterator, Skipper> ruleTransmissionSpectral;
@@ -512,6 +552,7 @@ protected:
     qi::rule<Iterator, Skipper> ruleTextureMapDiffuse;
     qi::rule<Iterator, Skipper> ruleTextureMapSpecular;
     qi::rule<Iterator, Skipper> ruleTextureMapSpecularExponent;
+    qi::rule<Iterator, Skipper> ruleTextureMapEmissive;
     qi::rule<Iterator, Skipper> ruleTextureMapDissolve;
     qi::rule<Iterator, Skipper> ruleTextureMapDecal;
     qi::rule<Iterator, Skipper> ruleTextureMapDisplacement;
@@ -519,21 +560,18 @@ protected:
 
     // Optional Flags
 
-    qi::rule<Iterator, bool(), Skipper> ruleTextureFlagBlendU;
-    qi::rule<Iterator, bool(), Skipper> ruleTextureFlagBlendV;
-    qi::rule<Iterator, bool(), Skipper> ruleTextureFlagColorCorrection;
-    qi::rule<Iterator, bool(), Skipper> ruleTextureFlagClamp;
-
-    qi::rule<Iterator, OBJVector3(), Skipper> ruleTextureFlagOffset;
-    qi::rule<Iterator, OBJVector3(), Skipper> ruleTextureFlagScale;
-    qi::rule<Iterator, OBJVector3(), Skipper> ruleTextureFlagTurbulence;
-
-    qi::rule<Iterator, OBJVector2(), Skipper> ruleTextureFlagRangeMod;
-
-    qi::rule<Iterator, uint32_t(), Skipper> ruleTextureFlagResolution;
-
-    qi::rule<Iterator, float(), Skipper> ruleTextureFlagBumpMultiplier; 
-    qi::rule<Iterator, float(), Skipper> ruleTextureFlagBoost;
+    qi::rule<Iterator, Skipper> ruleTextureFlagBlendU;
+    qi::rule<Iterator, Skipper> ruleTextureFlagBlendV;
+    qi::rule<Iterator, Skipper> ruleTextureFlagColorCorrection;
+    qi::rule<Iterator, Skipper> ruleTextureFlagClamp;
+    qi::rule<Iterator, Skipper> ruleTextureFlagOffset;
+    qi::rule<Iterator, Skipper> ruleTextureFlagScale;
+    qi::rule<Iterator, Skipper> ruleTextureFlagTurbulence;
+    qi::rule<Iterator, Skipper> ruleTextureFlagRangeMod;
+    qi::rule<Iterator, Skipper> ruleTextureFlagResolution;
+    qi::rule<Iterator, Skipper> ruleTextureFlagBumpMultiplier; 
+    qi::rule<Iterator, Skipper> ruleTextureFlagBoost;
+    qi::rule<Iterator, Skipper> ruleTextureFlagimfchan;
 
     //--------------------------------------------------------------------
     // Reflection Map Rules

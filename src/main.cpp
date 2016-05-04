@@ -27,22 +27,29 @@ int main(int argc, char** argv)
     OBJParser parser;
     OBJState* state = parser.getOBJState();
 
+    const std::string path = "test/test.obj";
+
     //--------------------------------------------------------------------
 
-    const std::string path = "test/testcube.obj";
+    const auto start = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    const auto result = parser.parseOBJFile(path);
+    const auto end = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
-    auto start = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-    const bool result = parser.parseOBJFile(path);
-    auto end = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    if(result != OBJParser::Result::Success)
+    {
+        std::cout << parser.getLastError() << std::endl;
+    }
+    else
+    {
+        const auto elapsed = end - start;
+        const double elapsedd = static_cast<double>(end - start) / static_cast<double>(1e9);
 
-    const auto elapsed = end - start;
-    const double elapsedf = static_cast<double>(end - start) / static_cast<double>(1e9);
+        std::cout << "Finished parsing '" << path << "' in " << elapsedd << " seconds" << std::endl;
 
-    std::cout << "Finished parsing '" << path << "' in " << elapsedf << " seconds. [" << (result ? "Success" : "Failed") << "][" << elapsed << "]" << std::endl;
-
-    std::cout << "# S: " << state->getSpatialData()->size() << "\n"
-              << "# T: " << state->getTextureData()->size() << "\n"
-              << "# N: " << state->getNormalData()->size() << std::endl;
+        std::cout << "# S: " << state->getSpatialData()->size() << "\n"
+                  << "# T: " << state->getTextureData()->size() << "\n"
+                  << "# N: " << state->getNormalData()->size() << std::endl;
+    }
 
     return 0;
 }

@@ -67,6 +67,7 @@ BOOST_FUSION_ADAPT_STRUCT(OBJVector3, (float, x), (float, y), (float, z))
  struct OBJVector4
  {
     OBJVector4() : x(0.0f), y(0.0f), z(0.0f), w(1.0f) { }
+    OBJVector4 const& operator=(OBJVector4 const& rhs) { x = rhs.x; y = rhs.y; z = rhs.z; w = rhs.w; return (*this); }
 
     union { float x, r, u, s; };
     union { float y, g, v, t; };

@@ -193,6 +193,38 @@ OBJMaterialProperty const& OBJMaterial::getSpecularReflectivity() const
 }
 
 //------------------------------------------------------------------------
+// Emissive Reflectivity
+//------------------------------------------------------------------------
+
+void OBJMaterial::setEmissiveReflectivityRGB(OBJVector3 const& rgb)
+{
+    m_EmissiveReflectivity.type = OBJMaterialPropertyType::RGB;
+    m_EmissiveReflectivity.r = rgb.x;
+    m_EmissiveReflectivity.g = rgb.y;
+    m_EmissiveReflectivity.b = rgb.z;
+}
+
+void OBJMaterial::setEmissiveReflectivityXYZ(OBJVector3 const& xyz)
+{    
+    m_EmissiveReflectivity.type = OBJMaterialPropertyType::XYZ;
+    m_EmissiveReflectivity.x = xyz.x;
+    m_EmissiveReflectivity.y = xyz.y;
+    m_EmissiveReflectivity.z = xyz.z;
+}
+
+void OBJMaterial::setEmissiveReflectivityRFL(OBJMaterialPropertyRFL const& rfl)
+{
+    m_EmissiveReflectivity.type = OBJMaterialPropertyType::RFL;
+    m_EmissiveReflectivity.rfl.path = rfl.path;
+    m_EmissiveReflectivity.rfl.factor = rfl.factor;
+}
+
+OBJMaterialProperty const& OBJMaterial::getEmissiveReflectivity() const
+{
+    return m_EmissiveReflectivity;
+}
+
+//------------------------------------------------------------------------
 // Transmission Filter
 //------------------------------------------------------------------------
 
@@ -243,7 +275,7 @@ OBJMaterialDissolve const& OBJMaterial::getDissolve() const
 // Illumination Model
 //------------------------------------------------------------------------
 
-void OBJMaterial::setIlluminationModel(uint32_t model)
+void OBJMaterial::setIlluminationModel(uint32_t const model)
 {
     m_IlluminationModel = model;
 }
@@ -254,24 +286,10 @@ uint32_t OBJMaterial::getIlluminationModel() const
 }
 
 //------------------------------------------------------------------------
-// Specular Exponent
-//------------------------------------------------------------------------
-
-void OBJMaterial::setSpecularExponent(uint32_t exponent)
-{
-    m_SpecularExponent = exponent;
-}
-
-uint32_t OBJMaterial::getSpecularExponent() const
-{
-    return m_SpecularExponent;
-}
-
-//------------------------------------------------------------------------
 // Sharpness
 //------------------------------------------------------------------------
 
-void OBJMaterial::setSharpness(uint32_t sharpness)
+void OBJMaterial::setSharpness(uint32_t const sharpness)
 {
     m_Sharpness = sharpness;
 }
@@ -282,10 +300,24 @@ uint32_t OBJMaterial::getSharpness() const
 }
 
 //------------------------------------------------------------------------
+// Specular Exponent
+//------------------------------------------------------------------------
+
+void OBJMaterial::setSpecularExponent(float const exponent)
+{
+    m_SpecularExponent = exponent;
+}
+
+float OBJMaterial::getSpecularExponent() const
+{
+    return m_SpecularExponent;
+}
+
+//------------------------------------------------------------------------
 // Optical Density
 //------------------------------------------------------------------------
 
-void OBJMaterial::setOpticalDensity(float density)
+void OBJMaterial::setOpticalDensity(float const density)
 {
     m_OpticalDensity = density;
 }
@@ -299,9 +331,9 @@ float OBJMaterial::getOpticalDensity() const
 // Ambient Texture
 //------------------------------------------------------------------------
 
-void OBJMaterial::setAmbientTexture(OBJTextureDescriptor const& descriptor)
+void OBJMaterial::setAmbientTexture(OBJTextureDescriptor const* descriptor)
 {
-    m_TextureAmbient = descriptor;
+    m_TextureAmbient = *descriptor;
 }
 
 OBJTextureDescriptor const& OBJMaterial::getAmbientTexture() const
@@ -313,9 +345,9 @@ OBJTextureDescriptor const& OBJMaterial::getAmbientTexture() const
 // Diffuse Texture
 //------------------------------------------------------------------------
 
-void OBJMaterial::setDiffuseTexture(OBJTextureDescriptor const& descriptor)
+void OBJMaterial::setDiffuseTexture(OBJTextureDescriptor const* descriptor)
 {
-    m_TextureDiffuse = descriptor;
+    m_TextureDiffuse = *descriptor;
 }
 
 OBJTextureDescriptor const& OBJMaterial::getDiffuseTexture() const
@@ -327,9 +359,9 @@ OBJTextureDescriptor const& OBJMaterial::getDiffuseTexture() const
 // Specular Texture
 //------------------------------------------------------------------------
 
-void OBJMaterial::setSpecularTexture(OBJTextureDescriptor const& descriptor)
+void OBJMaterial::setSpecularTexture(OBJTextureDescriptor const* descriptor)
 {
-    m_TextureSpecular = descriptor;
+    m_TextureSpecular = *descriptor;
 }
 
 OBJTextureDescriptor const& OBJMaterial::getSpecularTexture() const
@@ -341,9 +373,9 @@ OBJTextureDescriptor const& OBJMaterial::getSpecularTexture() const
 // SpecularExponent Texture
 //------------------------------------------------------------------------
 
-void OBJMaterial::setSpecularExponentTexture(OBJTextureDescriptor const& descriptor)
+void OBJMaterial::setSpecularExponentTexture(OBJTextureDescriptor const* descriptor)
 {
-    m_TextureSpecularExponent = descriptor;
+    m_TextureSpecularExponent = *descriptor;
 }
 
 OBJTextureDescriptor const& OBJMaterial::getSpecularExponentTexture() const
@@ -352,12 +384,26 @@ OBJTextureDescriptor const& OBJMaterial::getSpecularExponentTexture() const
 }
 
 //------------------------------------------------------------------------
+// Emissive Texture
+//------------------------------------------------------------------------
+
+void OBJMaterial::setEmissiveTexture(OBJTextureDescriptor const* descriptor)
+{
+    m_TextureEmissive = *descriptor;
+}
+
+OBJTextureDescriptor const& OBJMaterial::getEmissiveTexture() const
+{
+    return m_TextureEmissive;
+}
+
+//------------------------------------------------------------------------
 // Dissolve Texture
 //------------------------------------------------------------------------
 
-void OBJMaterial::setDissolveTexture(OBJTextureDescriptor const& descriptor)
+void OBJMaterial::setDissolveTexture(OBJTextureDescriptor const* descriptor)
 {
-    m_TextureDissolve = descriptor;
+    m_TextureDissolve = *descriptor;
 }
 
 OBJTextureDescriptor const& OBJMaterial::getDissolveTexture() const
@@ -369,9 +415,9 @@ OBJTextureDescriptor const& OBJMaterial::getDissolveTexture() const
 // Decal Texture
 //------------------------------------------------------------------------
 
-void OBJMaterial::setDecalTexture(OBJTextureDescriptor const& descriptor)
+void OBJMaterial::setDecalTexture(OBJTextureDescriptor const* descriptor)
 {
-    m_TextureDecal = descriptor;
+    m_TextureDecal = *descriptor;
 }
 
 OBJTextureDescriptor const& OBJMaterial::getDecalTexture() const
@@ -383,9 +429,9 @@ OBJTextureDescriptor const& OBJMaterial::getDecalTexture() const
 // Displacement Texture
 //------------------------------------------------------------------------
 
-void OBJMaterial::setDisplacementTexture(OBJTextureDescriptor const& descriptor)
+void OBJMaterial::setDisplacementTexture(OBJTextureDescriptor const* descriptor)
 {
-    m_TextureDisplacement = descriptor;
+    m_TextureDisplacement = *descriptor;
 }
 
 OBJTextureDescriptor const& OBJMaterial::getDisplacementTexture() const
@@ -397,9 +443,9 @@ OBJTextureDescriptor const& OBJMaterial::getDisplacementTexture() const
 // Bump Texture
 //------------------------------------------------------------------------
 
-void OBJMaterial::setBumpTexture(OBJTextureDescriptor const& descriptor)
+void OBJMaterial::setBumpTexture(OBJTextureDescriptor const* descriptor)
 {
-    m_TextureBump = descriptor;
+    m_TextureBump = *descriptor;
 }
 
 OBJTextureDescriptor const& OBJMaterial::getBumpTexture() const
@@ -430,10 +476,10 @@ OBJReflectionMapType OBJMaterial::getReflectionMapType() const
     return m_ReflectionMapType;
 }
 
-void OBJMaterial::setReflectionMapSphere(OBJTextureDescriptor const& descriptor)
+void OBJMaterial::setReflectionMapSphere(OBJTextureDescriptor const* descriptor)
 {
     m_ReflectionMapType = OBJReflectionMapType::Sphere;
-    m_ReflectionMapSphere = descriptor;
+    m_ReflectionMapSphere = *descriptor;
 }
 
 OBJTextureDescriptor const& OBJMaterial::getReflectionMapSphere() const
@@ -441,10 +487,10 @@ OBJTextureDescriptor const& OBJMaterial::getReflectionMapSphere() const
     return m_ReflectionMapSphere;
 }
 
-void OBJMaterial::setReflectionMapCubeSide(OBJReflectionMapCubeSide side, OBJTextureDescriptor const& descriptor)
+void OBJMaterial::setReflectionMapCubeSide(OBJReflectionMapCubeSide side, OBJTextureDescriptor const* descriptor)
 {
     m_ReflectionMapType = OBJReflectionMapType::Cube;
-    m_ReflectionMapCube[static_cast<uint32_t>(side)] = descriptor;
+    m_ReflectionMapCube[static_cast<uint32_t>(side)] = *descriptor;
 }
 
 OBJTextureDescriptor const& OBJMaterial::getReflectionMapCubeSide(OBJReflectionMapCubeSide side) const

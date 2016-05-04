@@ -87,7 +87,7 @@ public:
     void setTurbulence(OBJVector3 const& turbulence);
     OBJVector3 const& getTurbulence() const;
 
-    void setimfchan(OBJTextureChannel channel);
+    void setimfchan(char channel);
     OBJTextureChannel getimfchan() const;
 
     void setPath(std::string const& path);
