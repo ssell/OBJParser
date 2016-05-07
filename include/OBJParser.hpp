@@ -26,7 +26,7 @@
 // If defined, the parser will use boost memory mapped files for loading files.
 // This may drastically speed up file I/O but requires IOStream library dependency.
 
-#define OBJ_PARSER_USE_MEM_MAP
+//#define OBJ_PARSER_USE_MEM_MAP
 
 //------------------------------------------------------------------------------------------
 // OBJ Parser
@@ -125,7 +125,9 @@ protected:
     Result parseMTLFileMemMap(std::string const& path);
 
     std::string buildRelativeMTLPath(std::string const& objPath, std::string const& mtlPath);
+
     std::string extractLastLine(const char* str);
+    std::string extractLastLine(std::ifstream& stream);
 
     //--------------------------------------------------------------------
 

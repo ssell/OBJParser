@@ -95,8 +95,115 @@ OBJParser::Result OBJParser::parseOBJFilefstream(std::string const& path)
 {
     OBJParser::Result result = OBJParser::Result::Success;
 
+    //--------------------------------------------------------------------
+    // Parse the OBJ file
+    //--------------------------------------------------------------------
+
+    std::ifstream stream(path.c_str());
+
+    if(stream.is_open())
+    {
+        stream >> std::noskipws;
+
+        using Iterator = boost::spirit::istream_iterator;
+
+        Iterator first(stream);
+        Iterator last;
+
+        OBJGrammar<Iterator> grammar(&m_OBJState);
+        OBJCommentSkipper<Iterator> skipper;
+
+        if(qi::phrase_parse(first, last, grammar, skipper))
+        {
+            if(first != last)
+            {
+                result = OBJParser::Result::FailedOBJParseError;
+                m_LastError = "Failed to parse line '" + extractLastLine(stream) + "' in file '" + path + "'";
+            }
+        }
+        else
+        {
+            result = OBJParser::Result::FailedOBJParseError;
+            m_LastError = "Failed to parse line '" + extractLastLine(stream) + "' in file '" + path + "'";
+        }
+
+        stream.close();
+    }
+    else
+    {
+        result = OBJParser::Result::FailedOBJFileRead;
+        m_LastError = "Failed to open file '" + path + "'";
+    }
+
+    //--------------------------------------------------------------------
+    // Parse the MTL file (if any specified)
+    //--------------------------------------------------------------------
+
+    if(result == OBJParser::Result::Success)
+    {
+        auto materialLibraries = m_OBJState.getMaterialLibraries();
+
+        for(auto mtlPath : *materialLibraries)
+        {
+            result = parseMTLFilefstream(buildRelativeMTLPath(path, mtlPath));
+
+            if(result != OBJParser::Result::Success)
+            {
+                break;
+            }
+        }
+    }
+
     return result;
 }
+
+OBJParser::Result OBJParser::parseMTLFilefstream(std::string const& path)
+{
+    OBJParser::Result result = OBJParser::Result::Success;
+
+    std::ifstream stream(path.c_str());
+
+    if(stream.is_open())
+    {
+        stream >> std::noskipws;
+
+        using Iterator = boost::spirit::istream_iterator;
+
+        Iterator first(stream);
+        Iterator last;
+
+        MTLGrammar<Iterator> grammar(&m_OBJState);
+        MTLCommentSkipper<Iterator> skipper;
+
+        if(qi::phrase_parse(first, last, grammar, skipper))
+        {
+            if(first == last)
+            {
+                grammar.finishCurrentMaterial();
+            }
+            else
+            {
+                result = OBJParser::Result::FailedOBJParseError;
+                m_LastError = "Failed to parse line '" + extractLastLine(stream) + "' in file '" + path + "'";
+            }
+        }
+        else
+        {
+            result = OBJParser::Result::FailedOBJParseError;
+            m_LastError = "Failed to parse line '" + extractLastLine(stream) + "' in file '" + path + "'";
+        }
+
+        stream.close();
+    }
+    else
+    {
+        result = OBJParser::Result::FailedMTLFileRead;
+        m_LastError = "Failed to open file '" + path + "'";
+    }
+
+    return result;
+}
+
 
 OBJParser::Result OBJParser::parseOBJFileMemMap(std::string const& path)
 {
@@ -242,6 +349,8 @@ std::string OBJParser::buildRelativeMTLPath(std::string const& objPath, std::str
 
 std::string OBJParser::extractLastLine(const char* str)
 {
+    // Extract the next line and remove any pesky carriage returns
+
     std::string result = str;
     auto find = result.find_first_of('\n');
 
@@ -251,6 +360,28 @@ std::string OBJParser::extractLastLine(const char* str)
         result.erase(std::remove(result.begin(), result.end(), '\r'), result.end());
     }
 
+    return result;
+}
+
+std::string OBJParser::extractLastLine(std::ifstream& stream)
+{
+    // Seek backwards to the last newline (or file start) and then read in the following line
+
+    std::string result;
+
+    const uint32_t start = static_cast<uint32_t>(stream.tellg());
+    uint32_t current = start;
+
+    char c = ' ';
+
+    while((current > 0) && (c != '\n'))
+    {
+        stream.seekg(--current, stream.beg);
+        stream.get(c);
+    }
+
+    std::getline(stream, result);
+    
     return result;
 }
 
