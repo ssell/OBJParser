@@ -60,13 +60,13 @@ void OBJState::reserve(uint32_t const spatial, uint32_t const texture, uint32_t 
     m_GroupFreeFormReservedSize = groupFreeForms;
 }
 
-OBJAuxiliary OBJState::getAuxiliaryState(uint32_t index) const
+OBJRenderState OBJState::getRenderState(uint32_t index) const
 {
-    OBJAuxiliary result;
+    OBJRenderState result;
 
-    if(index < m_AuxiliaryStates.size())
+    if(index < m_RenderStates.size())
     {
-        result = m_AuxiliaryStates[index];
+        result = m_RenderStates[index];
     }
 
     return result;
@@ -165,7 +165,7 @@ void OBJState::addFace(OBJFace face)
     transformVertexGroup(face.group2);
     transformVertexGroup(face.group3);
 
-    face.auxState = static_cast<uint32_t>(m_AuxiliaryStates.size() - 1);
+    face.renderState = static_cast<uint32_t>(m_RenderStates.size() - 1);
 
     for(auto iter = m_ActiveGroups.begin(); iter != m_ActiveGroups.end(); ++iter)
     {
@@ -201,55 +201,55 @@ void OBJState::addPointCollection(std::vector<OBJVertexGroup>& points)
 
 void OBJState::setLevelOfDetail(uint32_t const lod)
 {
-    OBJAuxiliary auxState = m_AuxiliaryStates.back();
-    auxState.lod = lod;
+    OBJRenderState renderState = m_RenderStates.back();
+    renderState.lod = lod;
 
-    if(auxState.lod > 100)
+    if(renderState.lod > 100)
     {
-        auxState.lod = 100;    // "Specifying an integer between 1 and 100 sets the..."
+        renderState.lod = 100;    // "Specifying an integer between 1 and 100 sets the..."
     }
 
-    m_AuxiliaryStates.emplace_back(auxState);
+    m_RenderStates.emplace_back(renderState);
 }
 
 void OBJState::setSmoothingGroup(uint32_t const group)
 {
-    OBJAuxiliary auxState = m_AuxiliaryStates.back();
-    auxState.smoothing = group;
+    OBJRenderState renderState = m_RenderStates.back();
+    renderState.smoothing = group;
 
-    m_AuxiliaryStates.emplace_back(auxState);
+    m_RenderStates.emplace_back(renderState);
 }
 
 void OBJState::setBevelInterp(bool const on)
 {
-    OBJAuxiliary auxState = m_AuxiliaryStates.back();
-    auxState.bevelInterp = on;
+    OBJRenderState renderState = m_RenderStates.back();
+    renderState.bevelInterp = on;
 
-    m_AuxiliaryStates.emplace_back(auxState);
+    m_RenderStates.emplace_back(renderState);
 }
 
 void OBJState::setColorInterp(bool const on)
 {
-    OBJAuxiliary auxState = m_AuxiliaryStates.back();
-    auxState.colorInterp = on;
+    OBJRenderState renderState = m_RenderStates.back();
+    renderState.colorInterp = on;
 
-    m_AuxiliaryStates.emplace_back(auxState);
+    m_RenderStates.emplace_back(renderState);
 }
 
 void OBJState::setDissolveInterp(bool const on)
 {
-    OBJAuxiliary auxState = m_AuxiliaryStates.back();
-    auxState.dissolveInterp = on;
+    OBJRenderState renderState = m_RenderStates.back();
+    renderState.dissolveInterp = on;
 
-    m_AuxiliaryStates.emplace_back(auxState);
+    m_RenderStates.emplace_back(renderState);
 }
 
 void OBJState::setMaterial(std::string const& name)
 {
-    OBJAuxiliary auxState = m_AuxiliaryStates.back();
-    auxState.material = name;
+    OBJRenderState renderState = m_RenderStates.back();
+    renderState.material = name;
 
-    m_AuxiliaryStates.emplace_back(auxState);
+    m_RenderStates.emplace_back(renderState);
 }
 
 void OBJState::setMaterial(std::string const& name, OBJMaterial const& material)
@@ -267,10 +267,10 @@ void OBJState::addMaterialLibrary(std::string const& path)
 
 void OBJState::setTextureMap(std::string const& name)
 {
-    OBJAuxiliary auxState = m_AuxiliaryStates.back();
-    auxState.textureMap = name;
+    OBJRenderState renderState = m_RenderStates.back();
+    renderState.textureMap = name;
 
-    m_AuxiliaryStates.emplace_back(auxState);
+    m_RenderStates.emplace_back(renderState);
 }
 
 void OBJState::addTextureMapLibrary(std::string const& path)
@@ -280,28 +280,28 @@ void OBJState::addTextureMapLibrary(std::string const& path)
 
 void OBJState::setShadowObject(std::string const& name)
 {
-    OBJAuxiliary auxState = m_AuxiliaryStates.back();
-    auxState.shadowObj = name;
+    OBJRenderState renderState = m_RenderStates.back();
+    renderState.shadowObj = name;
 
-    if(auxState.shadowObj.compare("off") == 0)
+    if(renderState.shadowObj.compare("off") == 0)
     {
-        auxState.shadowObj = "";
+        renderState.shadowObj = "";
     }
 
-    m_AuxiliaryStates.emplace_back(auxState);
+    m_RenderStates.emplace_back(renderState);
 }
 
 void OBJState::setTracingObject(std::string const& name)
 {
-    OBJAuxiliary auxState = m_AuxiliaryStates.back();
-    auxState.traceObj = name;
+    OBJRenderState renderState = m_RenderStates.back();
+    renderState.traceObj = name;
 
-    if(auxState.traceObj.compare("off") == 0)
+    if(renderState.traceObj.compare("off") == 0)
     {
-        auxState.traceObj = "";
+        renderState.traceObj = "";
     }
 
-    m_AuxiliaryStates.emplace_back(auxState);
+    m_RenderStates.emplace_back(renderState);
 }
 
 //------------------------------------------------------------------------------------------
@@ -310,9 +310,9 @@ void OBJState::setTracingObject(std::string const& name)
 
 void OBJState::resetAuxiliaryStates() 
 {
-    m_AuxiliaryStates.clear();
-    m_AuxiliaryStates.reserve(50);                   // Arbitrary reserve
-    m_AuxiliaryStates.emplace_back(OBJAuxiliary());  // Set initial default state
+    m_RenderStates.clear();
+    m_RenderStates.reserve(50);                   // Arbitrary reserve
+    m_RenderStates.emplace_back(OBJRenderState());  // Set initial default state
 }
 
 void OBJState::transformVertexGroup(OBJVertexGroup& source) const

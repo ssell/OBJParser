@@ -124,7 +124,7 @@ BOOST_FUSION_ADAPT_STRUCT(OBJVertexGroup, (int32_t, indexSpatial), (int32_t, ind
 struct OBJFace
 {
     OBJFace()
-        : auxState(0)
+        : renderState(0)
     {
     
     }
@@ -136,10 +136,10 @@ struct OBJFace
     OBJVertexGroup group2;  ///< Third vertex for the face
     OBJVertexGroup group3;  ///< Fourth vertex for the face. Used only for Quad faces.
 
-    uint32_t auxState;      ///< The active auxiliary state when this face was specified. See OBJState::getAuxiliaryState
+    uint32_t renderState;   ///< The active render attribute state when this face was specified. See OBJState::getRenderState
 };
 
-BOOST_FUSION_ADAPT_STRUCT(OBJFace, (OBJVertexGroup, group0), (OBJVertexGroup, group1), (OBJVertexGroup, group2), (OBJVertexGroup, group3), (uint32_t, auxState))
+BOOST_FUSION_ADAPT_STRUCT(OBJFace, (OBJVertexGroup, group0), (OBJVertexGroup, group1), (OBJVertexGroup, group2), (OBJVertexGroup, group3), (uint32_t, renderState))
 
 //------------------------------------------------------------------------------------------
 

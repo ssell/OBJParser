@@ -89,7 +89,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\include\MTLGrammar.hpp" />
     <ClInclude Include="..\..\include\MTLGrammarSkipper.hpp" />
-    <ClInclude Include="..\..\include\OBJAuxillary.hpp" />
+    <ClInclude Include="..\..\include\OBJRenderState.hpp" />
     <ClInclude Include="..\..\include\OBJGrammar.hpp" />
     <ClInclude Include="..\..\include\OBJGrammarSkipper.hpp" />
     <ClInclude Include="..\..\include\OBJGroup.hpp" />

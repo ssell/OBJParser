@@ -18,7 +18,7 @@
 #define __H__OBJ_PARSER_STATE__H__
 
 #include "OBJGroup.hpp"
-#include "OBJAuxillary.hpp"
+#include "OBJRenderState.hpp"
 #include "OBJMaterial.hpp"
 
 #include <unordered_map>
@@ -67,15 +67,15 @@ public:
     void reserve(uint32_t spatial, uint32_t texture = 0, uint32_t normal = 0, uint32_t groupFaces = 0, uint32_t groupFreeForms = 0);
 
     /**
-     * Retrieves the specified auxiliary state.
+     * Retrieves the specified state of the render attributes.
      *
-     * Each face and free-form has an associated auxiliary state detailing extra state 
+     * Each face and free-form has an associated render attributes state detailing extra state 
      * settings that were active upon it's creation (such as material, lod, smoothing, etc.).
      *
-     * \param[in] index Auxiliary state index. If invalid, will return the default state.
-     * \return The specified auxiliary state.
+     * \param[in] index Render attribute state index. If invalid, will return the default state.
+     * \return The specified render attribute state.
      */
-    OBJAuxiliary getAuxiliaryState(uint32_t index) const;
+    OBJRenderState getRenderState(uint32_t index) const;
 
     /**
      * Fills a vector with pointers to all OBJGroups stored in the state.
@@ -318,7 +318,7 @@ protected:
     std::vector<std::string> m_MaterialLibraries;
     std::vector<std::string> m_TextureMapLibraries;
 
-    std::vector<OBJAuxiliary> m_AuxiliaryStates;
+    std::vector<OBJRenderState> m_RenderStates;
 
 private:
 };

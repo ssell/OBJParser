@@ -275,6 +275,7 @@ protected:
 
     //--------------------------------------------------------------------
     // Top-Level Rules
+    //--------------------------------------------------------------------
     
     qi::rule<Iterator, Skipper> ruleStart;
     qi::rule<Iterator, Skipper> ruleVertices;
@@ -286,12 +287,14 @@ protected:
 
     //--------------------------------------------------------------------
     // Group Rules
+    //--------------------------------------------------------------------
 
     qi::rule<Iterator, Skipper> ruleGroup;
     qi::rule<Iterator, std::string(), Skipper> ruleGroupName;
     
     //--------------------------------------------------------------------
     // Misc Data Rules
+    //--------------------------------------------------------------------
 
     qi::rule<Iterator, OBJVector2(), Skipper> ruleVector2Data;            ///< Parses "#.# #.#" of vertex point declarations (vt)
     qi::rule<Iterator, OBJVector3(), Skipper> ruleVector3Data;            ///< Parses "#.# #.# #.#" of vertex point declarations (vn)
@@ -302,6 +305,7 @@ protected:
 
     //--------------------------------------------------------------------
     // Vertex Rules
+    //--------------------------------------------------------------------
 
     qi::rule<Iterator, Skipper> ruleVertexSpatial;
     qi::rule<Iterator, Skipper> ruleVertexTexture;
@@ -309,6 +313,7 @@ protected:
 
     //--------------------------------------------------------------------
     // Face Rules
+    //--------------------------------------------------------------------
 
     qi::rule<Iterator, OBJFace(), Skipper> ruleFaceData;
     qi::rule<Iterator, Skipper> ruleFace;
@@ -321,28 +326,72 @@ protected:
 
     //--------------------------------------------------------------------
     // Free-Form Rules
+    //--------------------------------------------------------------------
+
+    // start statements
+    
+    qi::rule<Iterator, Skipper> ruleFreeFormCurve;           // curv
+    qi::rule<Iterator, Skipper> ruleFreeFormCurve2;          // curv2
+    qi::rule<Iterator, Skipper> ruleFreeFormSurface;         // surf
+
+    // end statement
+
+    qi::rule<Iterator, Skipper> ruleFreeFormEnd;             // end
+    
+    // body statements (may only appear between start and end statements)
+
+    qi::rule<Iterator, Skipper> ruleFreeFormParameter;       // parm
+    qi::rule<Iterator, Skipper> ruleFreeFormTrim;            // trim
+    qi::rule<Iterator, Skipper> ruleFreeFormHole;            // hole
+    qi::rule<Iterator, Skipper> ruleFreeFormSpecialPoint;    // sp
+    qi::rule<Iterator, Skipper> ruleFreeFormSpecialCurve;    // scrv
+
+    // state statements
+    
+    qi::rule<Iterator, Skipper> ruleFreeFormCSType;          // cstype
+    qi::rule<Iterator, Skipper> ruleFreeFormCTech;           // ctech
+    qi::rule<Iterator, Skipper> ruleFreeFormSTech;           // stech
+    qi::rule<Iterator, Skipper> ruleFreeFormDegree;          // deg
+    qi::rule<Iterator, Skipper> ruleFreeFormBasisMatrix;     // bmat
+    qi::rule<Iterator, Skipper> ruleFreeFormStep;            // step
+
+    // aux statements
+
 
     //--------------------------------------------------------------------
     // Material Rules
+    //--------------------------------------------------------------------
 
     qi::rule<Iterator, Skipper> ruleMaterialLibrary;
     qi::rule<Iterator, Skipper> ruleMaterialUse;
 
     //--------------------------------------------------------------------
-    // Auxiliary Rules
+    // Render Attribute Rules
+    //--------------------------------------------------------------------
+    
+    // polygon only
 
-    qi::rule<Iterator, Skipper> ruleSmoothing;
-    qi::rule<Iterator, Skipper> ruleLOD;
     qi::rule<Iterator, Skipper> ruleBevelInterp;
     qi::rule<Iterator, Skipper> ruleColorInterp;
     qi::rule<Iterator, Skipper> ruleDissolveInterp;
+
+    // all
+
+    qi::rule<Iterator, Skipper> ruleSmoothing;
+    qi::rule<Iterator, Skipper> ruleLOD;
     qi::rule<Iterator, Skipper> ruleTextureMapLibrary;
     qi::rule<Iterator, Skipper> ruleTextureMap;
     qi::rule<Iterator, Skipper> ruleShadowObj;
     qi::rule<Iterator, Skipper> ruleTraceObj;
 
+    // free-form only
+
+    qi::rule<Iterator, Skipper> ruleFreeFormCurveTech;       // ctech
+    qi::rule<Iterator, Skipper> ruleFreeFormSurfaceTech;     // stech
+
     //--------------------------------------------------------------------
     // Non-Rule Members
+    //--------------------------------------------------------------------
 
     OBJState* m_pOBJState;
 
