@@ -108,6 +108,12 @@ public:
     std::vector<OBJVector3> const* getNormalData() const;
 
     /**
+     * Returns a pointer to the container of all parsed parameter vertex data.
+     * \note Keep in mind that OBJ indices are 1-based while the data container indices are 0-based.
+     */
+    std::vector<OBJVector3> const* getParameterData() const;
+
+    /**
      * Returns a pointer to the container of all material libraries (accompanying .mtl files).
      */
     std::vector<std::string> const* getMaterialLibraries() const;
@@ -159,6 +165,15 @@ public:
      * \param[in] vector Normal vertex to add.
      */
     void addVertexNormal(OBJVector3 const& vector);
+
+    /**
+     * Adds a new free-form parameter (u, v, w) vertex element.
+     *
+     * \note Typically should only be used by the OBJGrammar class.
+     *
+     * \param[in] vector Free-Form parameter vertex to add.
+     */
+    void addVertexParameter(OBJVector3 const& vector);
 
     /**
      * Adds a new face element.
@@ -296,6 +311,14 @@ public:
      */
     void setTracingObject(std::string const& name);
 
+    void setTechniqueParametric(float res);
+    void setTechniqueParametricA(OBJVector2 const& vec);
+    void setTechniqueParametricB(float res);
+    void setTechniqueSpatialCurve(float length);
+    void setTechniqueSpatialSurface(float length);
+    void setTechniqueCurvatureCurve(OBJVector2 const& vec);
+    void setTechniqueCurvatureSurface(OBJVector2 const& vec);
+
 protected:
 
     void resetAuxiliaryStates();
@@ -313,7 +336,8 @@ protected:
 
     std::vector<OBJVector4> m_VertexSpatialData;
     std::vector<OBJVector2> m_VertexTextureData;    
-    std::vector<OBJVector3> m_VertexNormalData;
+    std::vector<OBJVector3> m_VertexNormalData;  
+    std::vector<OBJVector3> m_VertexParameterData;
     
     std::vector<std::string> m_MaterialLibraries;
     std::vector<std::string> m_TextureMapLibraries;

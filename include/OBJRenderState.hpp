@@ -60,8 +60,6 @@ struct OBJCurveTechnique
     float maxAngle;               ///< Angle between tangent vectors at line segment ends in Curvature subdivision. 0.0 if not used.
 };
 
-BOOST_FUSION_ADAPT_STRUCT(OBJCurveTechnique, (OBJSubdivision, type), (float, res), (float, maxLength), (float, maxDistance), (float, maxAngle))
-
 /**
  * \struct OBJSurfaceTechnique
  * \brief Specifies free-form surface subdivision technique.
@@ -84,8 +82,6 @@ struct OBJSurfaceTechnique
     float maxAngle;               ///< Angle between tangent vectors at line segment ends in Curvature subdivision. 0.0 if not used.
 };
 
-BOOST_FUSION_ADAPT_STRUCT(OBJSurfaceTechnique, (OBJSubdivision, type), (float, resU), (float, resV), (float, maxLength), (float, maxDistance), (float, maxAngle))
-
 /**
  * \struct OBJRenderState
  * \brief Struct of optional state settings.
@@ -106,20 +102,20 @@ struct OBJRenderState
 
     //--------------------------------------------------------------------
 
-    uint32_t smoothing;           ///< Smoothing group number. Default/no smoothing group is 0.
-    uint32_t lod;                 ///< Level-of-detail displayed. Off is 0. Otherwise, range of [1,100]
+    uint32_t smoothing;                      ///< Smoothing group number. Default/no smoothing group is 0.
+    uint32_t lod;                            ///< Level-of-detail displayed. Off is 0. Otherwise, range of [1,100]
 
-    bool bevelInterp;             ///< Sets bevel interpolation on/off. Default off. Polygons only.
-    bool colorInterp;             ///< Sets color interpolation on/off. Default off. Polygons only.
-    bool dissolveInterp;          ///< Sets dissolve interpolation on/off. Default off. Polygons only.
+    bool bevelInterp;                        ///< Sets bevel interpolation on/off. Default off. Polygons only.
+    bool colorInterp;                        ///< Sets color interpolation on/off. Default off. Polygons only.
+    bool dissolveInterp;                     ///< Sets dissolve interpolation on/off. Default off. Polygons only.
 
-    std::string material;         ///< Specifies the material to use. Empty means no material. Once set, material can only be changed.
-    std::string textureMap;       ///< Specifies the texture map to use. Empty or "off" means no map specified.
-    std::string shadowObj;        ///< Specifies the shadow object filename. Empty means no object specified.
-    std::string traceObj;         ///< Specifies the ray tracing object filename. Empty means no object specified.
+    std::string material;                    ///< Specifies the material to use. Empty means no material. Once set, material can only be changed.
+    std::string textureMap;                  ///< Specifies the texture map to use. Empty or "off" means no map specified.
+    std::string shadowObj;                   ///< Specifies the shadow object filename. Empty means no object specified.
+    std::string traceObj;                    ///< Specifies the ray tracing object filename. Empty means no object specified.
 
-    OBJCurveTechnique ctech;      ///< Specifies the curve approximation technique. Free-forms only.
-    OBJSurfaceTechnique stech;    ///< Specified the surface approximation technique. Free-froms only.
+    OBJCurveTechnique curveTechnique;        ///< Specifies the curve approximation technique. Free-forms only.
+    OBJSurfaceTechnique surfaceTechnique;    ///< Specified the surface approximation technique. Free-froms only.
 };
 
 //------------------------------------------------------------------------------------------

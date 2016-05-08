@@ -158,6 +158,11 @@ void OBJState::addVertexNormal(OBJVector3 const& vector)
     m_VertexNormalData.emplace_back(vector);
 }
 
+void OBJState::addVertexParameter(OBJVector3 const& vector)
+{
+    m_VertexParameterData.emplace_back(vector);
+}
+
 void OBJState::addFace(OBJFace face)
 {
     transformVertexGroup(face.group0);
@@ -209,7 +214,7 @@ void OBJState::setLevelOfDetail(uint32_t const lod)
         renderState.lod = 100;    // "Specifying an integer between 1 and 100 sets the..."
     }
 
-    m_RenderStates.emplace_back(renderState);
+    m_RenderStates.push_back(renderState);
 }
 
 void OBJState::setSmoothingGroup(uint32_t const group)
@@ -217,7 +222,7 @@ void OBJState::setSmoothingGroup(uint32_t const group)
     OBJRenderState renderState = m_RenderStates.back();
     renderState.smoothing = group;
 
-    m_RenderStates.emplace_back(renderState);
+    m_RenderStates.push_back(renderState);
 }
 
 void OBJState::setBevelInterp(bool const on)
@@ -225,7 +230,7 @@ void OBJState::setBevelInterp(bool const on)
     OBJRenderState renderState = m_RenderStates.back();
     renderState.bevelInterp = on;
 
-    m_RenderStates.emplace_back(renderState);
+    m_RenderStates.push_back(renderState);
 }
 
 void OBJState::setColorInterp(bool const on)
@@ -233,7 +238,7 @@ void OBJState::setColorInterp(bool const on)
     OBJRenderState renderState = m_RenderStates.back();
     renderState.colorInterp = on;
 
-    m_RenderStates.emplace_back(renderState);
+    m_RenderStates.push_back(renderState);
 }
 
 void OBJState::setDissolveInterp(bool const on)
@@ -241,7 +246,7 @@ void OBJState::setDissolveInterp(bool const on)
     OBJRenderState renderState = m_RenderStates.back();
     renderState.dissolveInterp = on;
 
-    m_RenderStates.emplace_back(renderState);
+    m_RenderStates.push_back(renderState);
 }
 
 void OBJState::setMaterial(std::string const& name)
@@ -249,7 +254,7 @@ void OBJState::setMaterial(std::string const& name)
     OBJRenderState renderState = m_RenderStates.back();
     renderState.material = name;
 
-    m_RenderStates.emplace_back(renderState);
+    m_RenderStates.push_back(renderState);
 }
 
 void OBJState::setMaterial(std::string const& name, OBJMaterial const& material)
@@ -270,7 +275,7 @@ void OBJState::setTextureMap(std::string const& name)
     OBJRenderState renderState = m_RenderStates.back();
     renderState.textureMap = name;
 
-    m_RenderStates.emplace_back(renderState);
+    m_RenderStates.push_back(renderState);
 }
 
 void OBJState::addTextureMapLibrary(std::string const& path)
@@ -288,7 +293,7 @@ void OBJState::setShadowObject(std::string const& name)
         renderState.shadowObj = "";
     }
 
-    m_RenderStates.emplace_back(renderState);
+    m_RenderStates.push_back(renderState);
 }
 
 void OBJState::setTracingObject(std::string const& name)
@@ -301,7 +306,95 @@ void OBJState::setTracingObject(std::string const& name)
         renderState.traceObj = "";
     }
 
-    m_RenderStates.emplace_back(renderState);
+    m_RenderStates.push_back(renderState);
+}
+
+void OBJState::setTechniqueParametric(float const res)
+{
+    OBJRenderState renderState = m_RenderStates.back();
+
+    renderState.curveTechnique.technique = OBJSubdivision::Parametric;
+    renderState.curveTechnique.res = res;
+    
+    renderState.surfaceTechnique.technique = OBJSubdivision::None;        // Disable surface technique
+
+    m_RenderStates.push_back(renderState);
+}
+
+void OBJState::setTechniqueParametricA(OBJVector2 const& vec)
+{
+    OBJRenderState renderState = m_RenderStates.back();
+
+    renderState.surfaceTechnique.technique = OBJSubdivision::ParametricA;
+    renderState.surfaceTechnique.resU = vec.x;
+    renderState.surfaceTechnique.resV = vec.y;
+    
+    renderState.curveTechnique.technique = OBJSubdivision::None;          // Disable curve technique
+
+    m_RenderStates.push_back(renderState);
+}
+
+void OBJState::setTechniqueParametricB(float const res)
+{
+    OBJRenderState renderState = m_RenderStates.back();
+
+    renderState.surfaceTechnique.technique = OBJSubdivision::ParametricB;
+    renderState.surfaceTechnique.resU = res;
+    renderState.surfaceTechnique.resV = res;
+    
+    renderState.curveTechnique.technique = OBJSubdivision::None;          // Disable curve technique
+
+    m_RenderStates.push_back(renderState);
+}
+
+void OBJState::setTechniqueSpatialCurve(float const length)
+{
+    OBJRenderState renderState = m_RenderStates.back();
+
+    renderState.curveTechnique.technique = OBJSubdivision::Spatial;
+    renderState.curveTechnique.maxLength = length;
+    
+    renderState.surfaceTechnique.technique = OBJSubdivision::None;        // Disable surface technique
+
+    m_RenderStates.push_back(renderState);
+}
+
+void OBJState::setTechniqueSpatialSurface(float const length)
+{
+    OBJRenderState renderState = m_RenderStates.back();
+
+    renderState.surfaceTechnique.technique = OBJSubdivision::Spatial;
+    renderState.surfaceTechnique.maxLength = length;
+    
+    renderState.curveTechnique.technique = OBJSubdivision::None;          // Disable curve technique
+
+    m_RenderStates.push_back(renderState);
+}
+
+void OBJState::setTechniqueCurvatureCurve(OBJVector2 const& vec)
+{
+    OBJRenderState renderState = m_RenderStates.back();
+
+    renderState.curveTechnique.technique = OBJSubdivision::Curvature;
+    renderState.curveTechnique.maxDistance = vec.x;
+    renderState.curveTechnique.maxAngle = vec.y;
+    
+    renderState.surfaceTechnique.technique = OBJSubdivision::None;        // Disable surface technique
+
+    m_RenderStates.push_back(renderState);
+}
+
+void OBJState::setTechniqueCurvatureSurface(OBJVector2 const& vec)
+{
+    OBJRenderState renderState = m_RenderStates.back();
+
+    renderState.surfaceTechnique.technique = OBJSubdivision::Curvature;
+    renderState.surfaceTechnique.maxDistance = vec.x;
+    renderState.surfaceTechnique.maxAngle = vec.y;
+    
+    renderState.curveTechnique.technique = OBJSubdivision::None;          // Disable curve technique
+
+    m_RenderStates.push_back(renderState);
 }
 
 //------------------------------------------------------------------------------------------

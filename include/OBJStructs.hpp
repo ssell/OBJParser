@@ -53,7 +53,7 @@ struct OBJVector3
 
     union { float x, r, u, s; };
     union { float y, g, v, t; };
-    union { float z, b, p; };
+    union { float z, b, w; };
 };
 
 BOOST_FUSION_ADAPT_STRUCT(OBJVector3, (float, x), (float, y), (float, z))
@@ -194,6 +194,69 @@ struct OBJPoint
 BOOST_FUSION_ADAPT_STRUCT(OBJPoint, (std::vector<OBJVertexGroup>, points))
 
 //------------------------------------------------------------------------------------------
+
+/**
+ * \struct OBJSimpleCurve
+ * \brief Individual curve definition comprising a larger free-form object
+ */
+struct OBJSimpleCurve
+{
+    float startParam;             ///< Starting parameter value for the trimming curve
+    float endParam;               ///< Ending parameter value for the trimming curve
+
+    uint32_t curve2DIndex;        ///< Index of the OBJCurve2D special curve lying in the parameter space of the surface
+};
+
+/**
+ * \struct OBJFreeForm
+ * \brief A free-form object in the form of a curve or surface
+ */
+struct OBJFreeForm
+{
+    std::vector<float> parametersU;         ///< Parameter values for the U direction
+    std::vector<float> parametersV;         ///< Parameter vlaues for the V direction
+    
+    std::vector<OBJSimpleCurve> trims;      ///< A sequence of curves to build a single outer trimming loop
+    std::vector<OBJSimpleCurve> holes;      ///< A sequence of curves to build a single inner trimming loop (hole)
+    std::vector<OBJSimpleCurve> special;    ///< A sequence of curves to build a single special curve
+
+    std::vector<uint32_t> specialPoints;    ///< Special geometric points to be associated with a curve or surface
+};
+
+/**
+ * \struct OBJCurve
+ * \brief A standard curve object.
+ */
+struct OBJCurve : public OBJFreeForm
+{
+    float startParam;
+    float endParam;
+
+    std::vector<OBJVertexGroup> controlPoints;
+};
+
+/**
+ * \struct OBJCurve2D
+ * \brief A 2D curve on a surface
+ */
+struct OBJCurve2 : public OBJFreeForm
+{
+    std::vector<uint32_t> parameterVertexIndices;
+};
+
+/**
+ * \struct OBJSurface
+ */
+struct OBJSurface : public OBJFreeForm
+{
+    float startParamU;
+    float endParamU;
+
+    float startParamV;
+    float endParamV;
+
+    std::vector<OBJVertexGroup> controlPoints;
+};
 
 #endif
 

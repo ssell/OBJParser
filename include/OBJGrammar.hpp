@@ -42,6 +42,8 @@ using namespace boost::spirit;
 template<typename Iterator, typename Skipper = OBJCommentSkipper<Iterator>>
 class OBJGrammar : public qi::grammar<Iterator, Skipper>
 {
+    using Rule = qi::rule<Iterator, Skipper>;
+
 public:
 
     OBJGrammar(OBJState* state) 
@@ -54,7 +56,7 @@ public:
         setupFaceRules();
         setupFreeFormRules();
         setupMaterialRules();
-        setupAuxiliaryRules();
+        setupRenderStateRules();
 
         ruleEmptyLine = *(qi::blank) >> qi::eol;
 
@@ -63,7 +65,7 @@ public:
                       ruleFaces       | 
                       ruleFreeForms   |
                       ruleMaterials   |
-                      ruleAuxiliaries |
+                      ruleRenderState |
                       ruleEmptyLine);
     }
 
@@ -118,6 +120,11 @@ protected:
         ruleVertexNormal =
             qi::lit("vn ") >>
             ruleVector3Data [boost::phoenix::bind(&OBJState::addVertexNormal, m_pOBJState, qi::_1)] >>
+            qi::eol;
+
+        ruleVertexParameter =
+            qi::lit("vp ") >>
+            ruleVector3Data [boost::phoenix::bind(&OBJState::addVertexParameter, m_pOBJState, qi::_1)] >>
             qi::eol;
         
         ruleVertices = ruleVertexSpatial | ruleVertexTexture | ruleVertexNormal;
@@ -182,7 +189,59 @@ protected:
 
     void setupFreeFormRules()
     {
-    
+        setupFreeFormStart();
+        setupFreeFormBody();
+        setupFreeFormEnd();
+
+        ruleFreeForms =
+            ruleFreeFormStart >>
+            +(ruleFreeFormBody) >>
+            ruleFreeFormEnd;
+    }
+
+    void setupFreeFormStart()
+    {
+        ruleFreeFormCurve =
+            qi::lit("curv") >>
+            qi::float_ >>              // starting param value
+            qi::float_ >>              // ending param value
+            qi::uint_ >>               // vertex indices (min two) ...
+            qi::uint_ >>
+            *(qi::uint_) >>
+            qi::eol;
+
+        ruleFreeFormCurve2 =
+            qi::lit("curv2") >>
+            qi::uint_ >>               // parameter indices (min two) ...
+            qi::uint_ >>
+            *(qi::uint_) >>
+            qi::eol;
+
+        ruleFreeFormSurface =
+            qi::lit("surf") >>
+            qi::float_ >>              // starting param value for U
+            qi::float_ >>              // ending param value for U
+            qi::float_ >>              // starting param value for V
+            qi::float_ >>              // ending param value for V
+            ruleVertexGroupData >>     // vertex indices (#/#/# form)
+            qi::eol;
+            
+        ruleFreeFormStart =
+            (ruleFreeFormCurve |
+             ruleFreeFormCurve2 |
+             ruleFreeFormSurface);
+    }
+
+    void setupFreeFormBody()
+    {
+
+    }
+
+    void setupFreeFormEnd()
+    {
+        ruleFreeFormEnd =
+            qi::lit("end") >>
+            qi::eol;
     }
 
     void setupMaterialRules()
@@ -205,18 +264,11 @@ protected:
         ruleMaterials = ruleMaterialLibrary | ruleMaterialUse;
     }
 
-    void setupAuxiliaryRules()
+    void setupRenderStateRules()
     {
-        ruleSmoothing = 
-            qi::lit("s ") >> 
-            (qi::lit("off") [boost::phoenix::bind(&OBJState::setSmoothingGroup, m_pOBJState, 0)] |
-             qi::uint_ [boost::phoenix::bind(&OBJState::setSmoothingGroup, m_pOBJState, qi::_1)]) >> 
-            qi::eol;
-
-        ruleLOD = 
-            qi::lit("lod ") >>
-            qi::int_ [boost::phoenix::bind(&OBJState::setLevelOfDetail, m_pOBJState, qi::_1)] >>
-            qi::eol;
+        //----------------------------------------------------------------
+        // Polygon Only
+        //----------------------------------------------------------------
 
         ruleBevelInterp = 
             qi::lit("bevel ") >> 
@@ -234,6 +286,21 @@ protected:
             qi::lit("d_interp ") >> 
             (qi::lit("on") [boost::phoenix::bind(&OBJState::setDissolveInterp, m_pOBJState, true)] | 
              qi::lit("off") [boost::phoenix::bind(&OBJState::setDissolveInterp, m_pOBJState, false)]) >> 
+            qi::eol;
+        
+        //----------------------------------------------------------------
+        // General
+        //----------------------------------------------------------------
+
+        ruleSmoothing = 
+            qi::lit("s ") >> 
+            (qi::lit("off") [boost::phoenix::bind(&OBJState::setSmoothingGroup, m_pOBJState, 0)] |
+             qi::uint_ [boost::phoenix::bind(&OBJState::setSmoothingGroup, m_pOBJState, qi::_1)]) >> 
+            qi::eol;
+
+        ruleLOD = 
+            qi::lit("lod ") >>
+            qi::int_ [boost::phoenix::bind(&OBJState::setLevelOfDetail, m_pOBJState, qi::_1)] >>
             qi::eol;
 
         ruleTextureMapLibrary = 
@@ -257,8 +324,68 @@ protected:
             qi::lit("trace_obj ") >> 
             ruleName [boost::phoenix::bind(&OBJState::setTracingObject, m_pOBJState, qi::_1)] >>
             qi::eol;
+        
+        //----------------------------------------------------------------
+        // Free-Form Only
+        //----------------------------------------------------------------
 
-        ruleAuxiliaries = ruleSmoothing |
+        // Curve Technique
+
+        Rule ruleCurveParametric =
+            qi::lit("cparm") >>
+            qi::float_ [boost::phoenix::bind(&OBJState::setTechniqueParametric, m_pOBJState, qi::_1)] >>
+            qi::eol;
+
+        Rule ruleCurveSpatial = 
+            qi::lit("cspace") >>
+            qi::float_ [boost::phoenix::bind(&OBJState::setTechniqueSpatialCurve, m_pOBJState, qi::_1)] >>
+            qi::eol;
+
+        Rule ruleCurveCurvature =
+            qi::lit("curv") >>
+            ruleVector2Data [boost::phoenix::bind(&OBJState::setTechniqueCurvatureCurve, m_pOBJState, qi::_1)] >>
+            qi::eol;
+
+        ruleFreeFormCurveTech =
+            qi::lit("ctech") >>
+            (ruleCurveParametric |
+             ruleCurveSpatial |
+             ruleCurveCurvature);
+
+        // Surface Technique
+
+        Rule ruleSurfaceParametricA =
+            qi::lit("cparma") >>
+            ruleVector2Data [boost::phoenix::bind(&OBJState::setTechniqueParametricA, m_pOBJState, qi::_1)] >>
+            qi::eol;
+
+        Rule ruleSurfaceParametricB =
+            qi::lit("cparmb") >>
+            qi::float_ [boost::phoenix::bind(&OBJState::setTechniqueParametricB, m_pOBJState, qi::_1)] >>
+            qi::eol;
+
+        Rule ruleSurfaceSpatial = 
+            qi::lit("cspace") >>
+            qi::float_ [boost::phoenix::bind(&OBJState::setTechniqueSpatialSurface, m_pOBJState, qi::_1)] >>
+            qi::eol;
+
+        Rule ruleSurfaceCurvature =
+            qi::lit("curv") >>
+            ruleVector2Data [boost::phoenix::bind(&OBJState::setTechniqueCurvatureSurface, m_pOBJState, qi::_1)] >>
+            qi::eol;
+
+        ruleFreeFormSurfaceTech =
+            qi::lit("ctech") >>
+            (ruleSurfaceParametricA |
+             ruleSurfaceParametricB |
+             ruleSurfaceSpatial |
+             ruleSurfaceCurvature);
+
+
+        
+        //----------------------------------------------------------------
+
+        ruleRenderState = ruleSmoothing |
                           ruleLOD |
                           ruleBevelInterp |
                           ruleColorInterp |
@@ -266,7 +393,9 @@ protected:
                           ruleTextureMapLibrary |
                           ruleTextureMap |
                           ruleShadowObj |
-                          ruleTraceObj;
+                          ruleTraceObj | 
+                          ruleFreeFormCurveTech |
+                          ruleFreeFormSurfaceTech;
     }
 
     //--------------------------------------------------------------------------------------
@@ -282,7 +411,7 @@ protected:
     qi::rule<Iterator, Skipper> ruleFaces;
     qi::rule<Iterator, Skipper> ruleFreeForms;
     qi::rule<Iterator, Skipper> ruleMaterials;
-    qi::rule<Iterator, Skipper> ruleAuxiliaries;
+    qi::rule<Iterator, Skipper> ruleRenderState;
     qi::rule<Iterator, Skipper> ruleEmptyLine;
 
     //--------------------------------------------------------------------
@@ -310,6 +439,7 @@ protected:
     qi::rule<Iterator, Skipper> ruleVertexSpatial;
     qi::rule<Iterator, Skipper> ruleVertexTexture;
     qi::rule<Iterator, Skipper> ruleVertexNormal;
+    qi::rule<Iterator, Skipper> ruleVertexParameter;
 
     //--------------------------------------------------------------------
     // Face Rules
@@ -330,22 +460,26 @@ protected:
 
     // start statements
     
-    qi::rule<Iterator, Skipper> ruleFreeFormCurve;           // curv
-    qi::rule<Iterator, Skipper> ruleFreeFormCurve2;          // curv2
-    qi::rule<Iterator, Skipper> ruleFreeFormSurface;         // surf
+    qi::rule<Iterator, Skipper> ruleFreeFormStart;
 
-    // end statement
-
-    qi::rule<Iterator, Skipper> ruleFreeFormEnd;             // end
+    qi::rule<Iterator, Skipper> ruleFreeFormCurve;         
+    qi::rule<Iterator, Skipper> ruleFreeFormCurve2;  
+    qi::rule<Iterator, Skipper> ruleFreeFormSurface; 
     
     // body statements (may only appear between start and end statements)
+
+    qi::rule<Iterator, Skipper> ruleFreeFormBody;
 
     qi::rule<Iterator, Skipper> ruleFreeFormParameter;       // parm
     qi::rule<Iterator, Skipper> ruleFreeFormTrim;            // trim
     qi::rule<Iterator, Skipper> ruleFreeFormHole;            // hole
-    qi::rule<Iterator, Skipper> ruleFreeFormSpecialPoint;    // sp
     qi::rule<Iterator, Skipper> ruleFreeFormSpecialCurve;    // scrv
+    qi::rule<Iterator, Skipper> ruleFreeFormSpecialPoint;    // sp
+    
+    // end statement
 
+    qi::rule<Iterator, Skipper> ruleFreeFormEnd;
+    
     // state statements
     
     qi::rule<Iterator, Skipper> ruleFreeFormCSType;          // cstype
@@ -354,9 +488,6 @@ protected:
     qi::rule<Iterator, Skipper> ruleFreeFormDegree;          // deg
     qi::rule<Iterator, Skipper> ruleFreeFormBasisMatrix;     // bmat
     qi::rule<Iterator, Skipper> ruleFreeFormStep;            // step
-
-    // aux statements
-
 
     //--------------------------------------------------------------------
     // Material Rules
@@ -386,8 +517,8 @@ protected:
 
     // free-form only
 
-    qi::rule<Iterator, Skipper> ruleFreeFormCurveTech;       // ctech
-    qi::rule<Iterator, Skipper> ruleFreeFormSurfaceTech;     // stech
+    qi::rule<Iterator, Skipper> ruleFreeFormCurveTech; 
+    qi::rule<Iterator, Skipper> ruleFreeFormSurfaceTech;  
 
     //--------------------------------------------------------------------
     // Non-Rule Members
