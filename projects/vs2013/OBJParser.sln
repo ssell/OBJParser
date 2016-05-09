@@ -8,13 +8,31 @@ EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
+		Debug|x64 = Debug|x64
+		DebugMemMap|Win32 = DebugMemMap|Win32
+		DebugMemMap|x64 = DebugMemMap|x64
 		Release|Win32 = Release|Win32
+		Release|x64 = Release|x64
+		ReleaseMemMap|Win32 = ReleaseMemMap|Win32
+		ReleaseMemMap|x64 = ReleaseMemMap|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{B5585FEA-1DFC-4585-BD94-43C2AD86450B}.Debug|Win32.ActiveCfg = Debug|Win32
 		{B5585FEA-1DFC-4585-BD94-43C2AD86450B}.Debug|Win32.Build.0 = Debug|Win32
+		{B5585FEA-1DFC-4585-BD94-43C2AD86450B}.Debug|x64.ActiveCfg = Debug|x64
+		{B5585FEA-1DFC-4585-BD94-43C2AD86450B}.Debug|x64.Build.0 = Debug|x64
+		{B5585FEA-1DFC-4585-BD94-43C2AD86450B}.DebugMemMap|Win32.ActiveCfg = DebugMemMap|Win32
+		{B5585FEA-1DFC-4585-BD94-43C2AD86450B}.DebugMemMap|Win32.Build.0 = DebugMemMap|Win32
+		{B5585FEA-1DFC-4585-BD94-43C2AD86450B}.DebugMemMap|x64.ActiveCfg = DebugMemMap|x64
+		{B5585FEA-1DFC-4585-BD94-43C2AD86450B}.DebugMemMap|x64.Build.0 = DebugMemMap|x64
 		{B5585FEA-1DFC-4585-BD94-43C2AD86450B}.Release|Win32.ActiveCfg = Release|Win32
 		{B5585FEA-1DFC-4585-BD94-43C2AD86450B}.Release|Win32.Build.0 = Release|Win32
+		{B5585FEA-1DFC-4585-BD94-43C2AD86450B}.Release|x64.ActiveCfg = Release|x64
+		{B5585FEA-1DFC-4585-BD94-43C2AD86450B}.Release|x64.Build.0 = Release|x64
+		{B5585FEA-1DFC-4585-BD94-43C2AD86450B}.ReleaseMemMap|Win32.ActiveCfg = ReleaseMemMap|Win32
+		{B5585FEA-1DFC-4585-BD94-43C2AD86450B}.ReleaseMemMap|Win32.Build.0 = ReleaseMemMap|Win32
+		{B5585FEA-1DFC-4585-BD94-43C2AD86450B}.ReleaseMemMap|x64.ActiveCfg = ReleaseMemMap|x64
+		{B5585FEA-1DFC-4585-BD94-43C2AD86450B}.ReleaseMemMap|x64.Build.0 = ReleaseMemMap|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -29,6 +29,14 @@
  */
 class OBJGroup
 {
+    enum class FreeFormType
+    {
+        None = 0,
+        Curve,
+        Curve2D,
+        Surface
+    };
+
 public:
 
     OBJGroup();

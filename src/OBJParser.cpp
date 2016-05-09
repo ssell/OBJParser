@@ -20,16 +20,17 @@
 
 #ifdef OBJ_PARSER_USE_MEM_MAP
 #include <boost/iostreams/device/mapped_file.hpp>
-#else
-#include <fstream>
 #endif
+
+#include <fstream>
 
 //------------------------------------------------------------------------------------------
 // Constructors
 //------------------------------------------------------------------------------------------
 
 OBJParser::OBJParser()
-    : m_LastError("No Error")
+    : m_LastError("No Error"),
+      m_ParseFreeForm(false)
 {
 
 }
@@ -51,7 +52,7 @@ OBJParser::Result OBJParser::parseOBJString(std::string const& str)
     
     m_OBJState.clearState();
 
-    OBJGrammar<Iterator> grammar(&m_OBJState);
+    OBJGrammar<Iterator> grammar(&m_OBJState, m_ParseFreeForm);
     OBJCommentSkipper<Iterator> skipper;
 
     if(!qi::phrase_parse(str.begin(), str.end(), grammar, skipper))
@@ -82,6 +83,11 @@ OBJState* OBJParser::getOBJState()
     return &m_OBJState;
 }
 
+void OBJParser::enableFreeFormParsing(bool enable)
+{
+    m_ParseFreeForm = enable;
+}
+
 std::string const& OBJParser::getLastError() const
 {
     return m_LastError;
@@ -94,6 +100,8 @@ std::string const& OBJParser::getLastError() const
 OBJParser::Result OBJParser::parseOBJFilefstream(std::string const& path)
 {
     OBJParser::Result result = OBJParser::Result::Success;
+
+#ifndef OBJ_PARSER_USE_MEM_MAP
 
     //--------------------------------------------------------------------
     // Parse the OBJ file
@@ -110,7 +118,7 @@ OBJParser::Result OBJParser::parseOBJFilefstream(std::string const& path)
         Iterator first(stream);
         Iterator last;
 
-        OBJGrammar<Iterator> grammar(&m_OBJState);
+        OBJGrammar<Iterator> grammar(&m_OBJState, m_ParseFreeForm);
         OBJCommentSkipper<Iterator> skipper;
 
         if(qi::phrase_parse(first, last, grammar, skipper))
@@ -153,6 +161,7 @@ OBJParser::Result OBJParser::parseOBJFilefstream(std::string const& path)
             }
         }
     }
+#endif
 
     return result;
 }
@@ -161,6 +170,7 @@ OBJParser::Result OBJParser::parseMTLFilefstream(std::string const& path)
 {
     OBJParser::Result result = OBJParser::Result::Success;
 
+#ifndef OBJ_PARSER_USE_MEM_MAP
     std::ifstream stream(path.c_str());
 
     if(stream.is_open())
@@ -200,6 +210,7 @@ OBJParser::Result OBJParser::parseMTLFilefstream(std::string const& path)
         result = OBJParser::Result::FailedMTLFileRead;
         m_LastError = "Failed to open file '" + path + "'";
     }
+#endif
 
     return result;
 }
@@ -223,7 +234,7 @@ OBJParser::Result OBJParser::parseOBJFileMemMap(std::string const& path)
         auto last = first + mappedFile.size();
 
         using Iterator = decltype(first);
-        OBJGrammar<Iterator> grammar(&m_OBJState);
+        OBJGrammar<Iterator> grammar(&m_OBJState, m_ParseFreeForm);
         OBJCommentSkipper<Iterator> skipper;
 
         if(qi::phrase_parse(first, last, grammar, skipper))

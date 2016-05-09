@@ -17,6 +17,7 @@
 #ifndef __H__OBJ_PARSER_STATE__H__
 #define __H__OBJ_PARSER_STATE__H__
 
+#include "OBJFreeFormState.hpp"
 #include "OBJGroup.hpp"
 #include "OBJRenderState.hpp"
 #include "OBJMaterial.hpp"
@@ -67,6 +68,14 @@ public:
     void reserve(uint32_t spatial, uint32_t texture = 0, uint32_t normal = 0, uint32_t groupFaces = 0, uint32_t groupFreeForms = 0);
 
     /**
+     * Returns a pointer to the internal OBJFreeForm state. 
+     * This state defines all free-form geometries, connections, and most of their attributes.
+     *
+     * \note This pointer will never be invalid, but the state will be cleared when clearState is called.
+     */
+    OBJFreeFormState* getFreeFormState();
+
+    /**
      * Retrieves the specified state of the render attributes.
      *
      * Each face and free-form has an associated render attributes state detailing extra state 
@@ -108,12 +117,6 @@ public:
     std::vector<OBJVector3> const* getNormalData() const;
 
     /**
-     * Returns a pointer to the container of all parsed parameter vertex data.
-     * \note Keep in mind that OBJ indices are 1-based while the data container indices are 0-based.
-     */
-    std::vector<OBJVector3> const* getParameterData() const;
-
-    /**
      * Returns a pointer to the container of all material libraries (accompanying .mtl files).
      */
     std::vector<std::string> const* getMaterialLibraries() const;
@@ -138,6 +141,10 @@ public:
      * \param[in] name Group name.
      */
     void addActiveGroup(std::string const& name);
+
+    //--------------------------------------------------------------------
+    // Vertex Data Methods
+    //--------------------------------------------------------------------
 
     /**
      * Adds a new spatial (x, y, z, w) vertex element.
@@ -175,6 +182,10 @@ public:
      */
     void addVertexParameter(OBJVector3 const& vector);
 
+    //--------------------------------------------------------------------
+    // Geometry Creation Methods
+    //--------------------------------------------------------------------
+
     /**
      * Adds a new face element.
      *
@@ -201,7 +212,75 @@ public:
      * \param[in] points Points to add.
      */
     void addPointCollection(std::vector<OBJVertexGroup>& points);
-    
+
+    /**
+     * Adds a new OBJCurve to the internal OBJFreeFormState.
+     * \param[in] curve
+     */
+    void addFreeFormCurve(OBJCurve const& curve);
+
+    /**
+     * Adds a new OBJCurve2D to the internal OBJFreeFormState.
+     * \param[in] points
+     */
+    void addFreeFormCurve2D(std::vector<int32_t> const& points);
+
+    /**
+     * Adds a new OBJSurface to the internal OBJFreeFormState.
+     * \param[in] surface
+     */
+    void addFreeFormSurface(OBJSurface const& surface);
+
+    /**
+     * Adds a new OBJSurfaceConnection to the internal OBJFreeFormState.
+     * \param[in] connection
+     */
+    void addFreeFormConnection(OBJSurfaceConnection connection);
+
+    //--------------------------------------------------------------------
+    // Free-Form Body Methods
+    //--------------------------------------------------------------------
+
+    /**
+     * Adds parameter u values to the newest OBJFreeForm in the internal OBJFreeFormState.
+     * \param[in] parameters
+     */
+    void addFreeFormParameterU(std::vector<float> const& parameters);
+
+    /**
+     * Adds parameter v values to the newest OBJFreeForm in the internal OBJFreeFormState.
+     * \param[in] parameters
+     */
+    void addFreeFormParameterV(std::vector<float> const& parameters);
+
+    /**
+     * Adds trim values to the newest OBJFreeForm in the internal OBJFreeFormState.
+     * \param[in] trim
+     */
+    void addFreeFormTrim(OBJSimpleCurve const& trim);
+
+    /**
+     * Adds hole values to the newest OBJFreeForm in the internal OBJFreeFormState.
+     * \param[in] hole
+     */
+    void addFreeFormHole(OBJSimpleCurve const& hole);
+
+    /**
+     * Adds scurve values to the newest OBJFreeForm in the internal OBJFreeFormState.
+     * \param[in] scurve
+     */
+    void addFreeFormSpecialCurve(OBJSimpleCurve const& scurve);
+
+    /**
+     * Adds points values to the newest OBJFreeForm in the internal OBJFreeFormState.
+     * \param[in] points
+     */
+    void addFreeFormSpecialPoints(std::vector<int32_t> const& points);
+
+    //--------------------------------------------------------------------
+    // Render State Setting Methods
+    //--------------------------------------------------------------------
+
     /**
      * Sets the smoothing group for the current auxiliary state.
      *
@@ -311,13 +390,132 @@ public:
      */
     void setTracingObject(std::string const& name);
 
+    //--------------------------------------------------------------------
+    // Free-Form Technique Methods
+    //--------------------------------------------------------------------
+
+    /**
+     * Sets a technique attribute on the current RenderState.
+     * \note Typically should only be used by the OBJGrammar class.
+     * \param[in] res
+     */
     void setTechniqueParametric(float res);
+
+    /**
+     * Sets a technique attribute on the current RenderState.
+     * \note Typically should only be used by the OBJGrammar class.
+     * \param[in] vec
+     */
     void setTechniqueParametricA(OBJVector2 const& vec);
+
+    /**
+     * Sets a technique attribute on the current RenderState.
+     * \note Typically should only be used by the OBJGrammar class.
+     * \param[in] res
+     */
     void setTechniqueParametricB(float res);
+
+    /**
+     * Sets a technique attribute on the current RenderState.
+     * \note Typically should only be used by the OBJGrammar class.
+     * \param[in] length
+     */
     void setTechniqueSpatialCurve(float length);
+
+    /**
+     * Sets a technique attribute on the current RenderState.
+     * \note Typically should only be used by the OBJGrammar class.
+     * \param[in] length
+     */
     void setTechniqueSpatialSurface(float length);
+
+    /**
+     * Sets a technique attribute on the current RenderState.
+     * \note Typically should only be used by the OBJGrammar class.
+     * \param[in] vec
+     */
     void setTechniqueCurvatureCurve(OBJVector2 const& vec);
+
+    /**
+     * Sets a technique attribute on the current RenderState.
+     * \note Typically should only be used by the OBJGrammar class.
+     * \param[in] vec
+     */
     void setTechniqueCurvatureSurface(OBJVector2 const& vec);
+
+    //--------------------------------------------------------------------
+    // Free-Form Attribute State Methods
+    //--------------------------------------------------------------------
+
+    /**
+     * Sets an attribute on the current OBJFreeFormAttributeState
+     * \note Typically should only be used by the OBJGrammar class.
+     * \param[in] type
+     */
+    void setFreeFormType(OBJFreeFormType type);
+
+    /**
+     * Sets an attribute on the current OBJFreeFormAttributeState
+     * \note Typically should only be used by the OBJGrammar class.
+     * \param[in] rational
+     */
+    void setFreeFormRational(bool rational);
+
+    /**
+     * Sets an attribute on the current OBJFreeFormAttributeState
+     * \note Typically should only be used by the OBJGrammar class.
+     * \param[in] degree
+     */
+    void setFreeFormDegreeU(int32_t degree);
+
+    /**
+     * Sets an attribute on the current OBJFreeFormAttributeState
+     * \note Typically should only be used by the OBJGrammar class.
+     * \param[in] degree
+     */
+    void setFreeFormDegreeV(int32_t degree);
+
+    /**
+     * Sets an attribute on the current OBJFreeFormAttributeState
+     * \note Typically should only be used by the OBJGrammar class.
+     * \param[in] step
+     */
+    void setFreeFormStepU(int32_t step);
+
+    /**
+     * Sets an attribute on the current OBJFreeFormAttributeState
+     * \note Typically should only be used by the OBJGrammar class.
+     * \param[in] step
+     */
+    void setFreeFormStepV(int32_t step);
+
+    /**
+     * Sets an attribute on the current OBJFreeFormAttributeState
+     * \note Typically should only be used by the OBJGrammar class.
+     * \param[in] matrix
+     */
+    void setFreeFormBasisMatrixU(std::vector<float> const& matrix);
+
+    /**
+     * Sets an attribute on the current OBJFreeFormAttributeState
+     * \note Typically should only be used by the OBJGrammar class.
+     * \param[in] matrix
+     */
+    void setFreeFormBasisMatrixV(std::vector<float> const& matrix);
+
+    /**
+     * Sets an attribute on the current OBJFreeFormAttributeState
+     * \note Typically should only be used by the OBJGrammar class.
+     * \param[in] id
+     */
+    void setFreeFormMergeGroupNumber(int32_t id);
+
+    /**
+     * Sets an attribute on the current OBJFreeFormAttributeState
+     * \note Typically should only be used by the OBJGrammar class.
+     * \param[in] res
+     */
+    void setFreeFormMergeGroupResolution(float res);
 
 protected:
 
@@ -328,6 +526,9 @@ protected:
 
     uint32_t m_GroupFacesReservedSize;
     uint32_t m_GroupFreeFormReservedSize;
+    
+    OBJFreeFormState m_FreeFormState;
+    bool m_FreeFormRational;
 
     std::unordered_map<std::string, OBJGroup> m_GroupMap;
     std::unordered_map<std::string, OBJMaterial> m_MaterialMap;
@@ -337,7 +538,6 @@ protected:
     std::vector<OBJVector4> m_VertexSpatialData;
     std::vector<OBJVector2> m_VertexTextureData;    
     std::vector<OBJVector3> m_VertexNormalData;  
-    std::vector<OBJVector3> m_VertexParameterData;
     
     std::vector<std::string> m_MaterialLibraries;
     std::vector<std::string> m_TextureMapLibraries;

@@ -36,12 +36,12 @@ OBJGroup::~OBJGroup()
 
 void OBJGroup::addLine(std::vector<OBJVertexGroup> const& line)
 {
-    lines.emplace_back(OBJLine(line));
+    lines.emplace_back(line);
 }
 
 void OBJGroup::addPointCollection(std::vector<OBJVertexGroup> const& points)
 {
-    this->points.emplace_back(OBJPoint(points));
+    this->points.emplace_back(points);
 }
 
 //------------------------------------------------------------------------------------------

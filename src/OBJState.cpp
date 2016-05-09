@@ -22,7 +22,8 @@
 
 OBJState::OBJState()
     : m_GroupFacesReservedSize(0),
-      m_GroupFreeFormReservedSize(0)
+      m_GroupFreeFormReservedSize(0),
+      m_FreeFormRational(false)
 {
 
 }
@@ -41,6 +42,7 @@ void OBJState::clearState()
     m_VertexSpatialData.clear();
     m_VertexTextureData.clear();
     m_VertexNormalData.clear();
+    m_FreeFormState.vertexParameterData.clear();
 
     m_ActiveGroups.clear();
     m_GroupMap.clear();
@@ -58,6 +60,11 @@ void OBJState::reserve(uint32_t const spatial, uint32_t const texture, uint32_t 
 
     m_GroupFacesReservedSize = groupIndices;
     m_GroupFreeFormReservedSize = groupFreeForms;
+}
+
+OBJFreeFormState* OBJState::getFreeFormState()
+{
+    return &m_FreeFormState;
 }
 
 OBJRenderState OBJState::getRenderState(uint32_t index) const
@@ -143,6 +150,10 @@ void OBJState::addActiveGroup(std::string const& name)
     }
 }
 
+//------------------------------------------------------------------------------------------
+// Vertex Data Methods
+//------------------------------------------------------------------------------------------
+
 void OBJState::addVertexSpatial(OBJVector4 const& vector)
 {
     m_VertexSpatialData.emplace_back(vector);
@@ -160,8 +171,12 @@ void OBJState::addVertexNormal(OBJVector3 const& vector)
 
 void OBJState::addVertexParameter(OBJVector3 const& vector)
 {
-    m_VertexParameterData.emplace_back(vector);
+    m_FreeFormState.vertexParameterData.emplace_back(vector);
 }
+
+//------------------------------------------------------------------------------------------
+// Geometry Creation Methods
+//------------------------------------------------------------------------------------------
 
 void OBJState::addFace(OBJFace face)
 {
@@ -203,6 +218,138 @@ void OBJState::addPointCollection(std::vector<OBJVertexGroup>& points)
         (*iter)->addPointCollection(points);
     }
 }
+
+void OBJState::addFreeFormCurve(OBJCurve const& curve)
+{
+    std::vector<OBJVertexGroup> transformed;
+    transformed.reserve(curve.controlPoints.size());
+    transformed.insert(transformed.begin(), curve.controlPoints.begin(), curve.controlPoints.end());
+
+    for(auto iter = transformed.begin(); iter != transformed.end(); ++iter)
+    {
+        transformVertexGroup((*iter));
+    }
+
+    const uint32_t state = static_cast<uint32_t>(m_FreeFormState.attributeStates.size());
+    m_FreeFormState.addCurve(state, curve.startParam, curve.endParam, transformed);
+}
+
+void OBJState::addFreeFormCurve2D(std::vector<int32_t> const& points)
+{
+    std::vector<int32_t> transformed;
+    transformed.reserve(points.size());
+    transformed.insert(transformed.begin(), points.begin(), points.end());
+
+    for(auto iter = transformed.begin(); iter != transformed.end(); ++iter)
+    {
+        if((*iter) < 0)
+        {
+            (*iter) += static_cast<int32_t>(m_FreeFormState.vertexParameterData.size()) + 1;  // +1 to maintain index 1-base
+        }
+    }
+
+    const uint32_t state = static_cast<uint32_t>(m_FreeFormState.attributeStates.size());
+    m_FreeFormState.addCurve2D(state, transformed);
+}
+
+void OBJState::addFreeFormSurface(OBJSurface const& surface)
+{
+    std::vector<OBJVertexGroup> transformed;
+    transformed.reserve(surface.controlPoints.size());
+    transformed.insert(transformed.begin(), surface.controlPoints.begin(), surface.controlPoints.end());
+
+    for(auto iter = transformed.begin(); iter != transformed.end(); ++iter)
+    {
+        transformVertexGroup((*iter));
+    }
+
+    const uint32_t state = static_cast<uint32_t>(m_FreeFormState.attributeStates.size());
+    m_FreeFormState.addSurface(state, surface.startParamU, surface.endParamU, surface.startParamV, surface.endParamV, transformed);
+}
+
+void OBJState::addFreeFormConnection(OBJSurfaceConnection connection)
+{
+    //--------------------------------------------------------------------
+    // Transform indicies to positive 0-base
+    //--------------------------------------------------------------------
+
+    if(connection.surfaceIndex0 < 0)
+    {
+        connection.surfaceIndex0 += static_cast<uint32_t>(m_FreeFormState.surfaces.size());
+    }
+    else
+    {
+        connection.surfaceIndex0--;
+    }
+
+    if(connection.curve2DIndex0 < 0)
+    {
+        connection.curve2DIndex0 += static_cast<uint32_t>(m_FreeFormState.curves2D.size());
+    }
+    else
+    {
+        connection.curve2DIndex0--;
+    }
+
+    if(connection.surfaceIndex1 < 0)
+    {
+        connection.surfaceIndex1 += static_cast<uint32_t>(m_FreeFormState.surfaces.size());
+    }
+    else
+    {
+        connection.surfaceIndex1--;
+    }
+
+    if(connection.curve2DIndex1 < 0)
+    {
+        connection.curve2DIndex1 += static_cast<uint32_t>(m_FreeFormState.curves2D.size());
+    }
+    else
+    {
+        connection.curve2DIndex1--;
+    }
+
+    //--------------------------------------------------------------------
+
+    m_FreeFormState.connections.push_back(connection);
+}
+
+//------------------------------------------------------------------------------------------
+// Free-Form Body Methods
+//------------------------------------------------------------------------------------------
+
+void OBJState::addFreeFormParameterU(std::vector<float> const& parameters)
+{
+    m_FreeFormState.addParameterU(parameters);
+}
+
+void OBJState::addFreeFormParameterV(std::vector<float> const& parameters)
+{
+    m_FreeFormState.addParameterV(parameters);
+}
+void OBJState::addFreeFormTrim(OBJSimpleCurve const& trim)
+{
+    m_FreeFormState.addTrim(trim);
+}
+
+void OBJState::addFreeFormHole(OBJSimpleCurve const& hole)
+{
+    m_FreeFormState.addHole(hole);
+}
+
+void OBJState::addFreeFormSpecialCurve(OBJSimpleCurve const& scurve)
+{
+    m_FreeFormState.addSpecialCurve(scurve);
+}
+
+void OBJState::addFreeFormSpecialPoints(std::vector<int32_t> const& points)
+{
+    m_FreeFormState.addSpecialPoints(points);
+}
+
+//------------------------------------------------------------------------------------------
+// Render State Setting Methods
+//------------------------------------------------------------------------------------------
 
 void OBJState::setLevelOfDetail(uint32_t const lod)
 {
@@ -309,6 +456,10 @@ void OBJState::setTracingObject(std::string const& name)
     m_RenderStates.push_back(renderState);
 }
 
+//------------------------------------------------------------------------------------------
+// Free-Form Technique Methods
+//------------------------------------------------------------------------------------------
+
 void OBJState::setTechniqueParametric(float const res)
 {
     OBJRenderState renderState = m_RenderStates.back();
@@ -398,14 +549,84 @@ void OBJState::setTechniqueCurvatureSurface(OBJVector2 const& vec)
 }
 
 //------------------------------------------------------------------------------------------
+// Free-Form Attribute State Methods
+//------------------------------------------------------------------------------------------
+
+void OBJState::setFreeFormType(OBJFreeFormType const type)
+{
+    OBJFreeFormAttributeState state;
+    state.type = type;
+    state.rational = m_FreeFormRational;
+
+    m_FreeFormState.attributeStates.push_back(state);
+
+    m_FreeFormRational = false;
+}
+
+void OBJState::setFreeFormRational(bool rational)
+{
+    m_FreeFormRational = rational;
+}
+
+void OBJState::setFreeFormDegreeU(int32_t const degree)
+{
+    m_FreeFormState.attributeStates.back().degreeU = degree;
+}
+
+void OBJState::setFreeFormDegreeV(int32_t const degree)
+{
+    m_FreeFormState.attributeStates.back().degreeV = degree;
+}
+
+void OBJState::setFreeFormStepU(int32_t const step)
+{
+    m_FreeFormState.attributeStates.back().stepU = step;
+}
+
+void OBJState::setFreeFormStepV(int32_t const step)
+{
+    m_FreeFormState.attributeStates.back().stepV = step;
+}
+
+void OBJState::setFreeFormBasisMatrixU(std::vector<float> const& matrix)
+{
+    OBJFreeFormAttributeState* state = &m_FreeFormState.attributeStates.back();
+
+    state->basisMatrixU.reserve(state->basisMatrixU.size() + matrix.size());
+    state->basisMatrixU.insert(state->basisMatrixU.end(), matrix.begin(), matrix.end());
+}
+
+void OBJState::setFreeFormBasisMatrixV(std::vector<float> const& matrix)
+{
+    OBJFreeFormAttributeState* state = &m_FreeFormState.attributeStates.back();
+
+    state->basisMatrixV.reserve(state->basisMatrixV.size() + matrix.size());
+    state->basisMatrixV.insert(state->basisMatrixV.end(), matrix.begin(), matrix.end());
+}
+
+void OBJState::setFreeFormMergeGroupNumber(int32_t const id)
+{
+    m_FreeFormState.attributeStates.back().mergeGroupNumber = id;
+}
+
+void OBJState::setFreeFormMergeGroupResolution(float const res)
+{
+    m_FreeFormState.attributeStates.back().mergeGroupResolution = res;
+}
+
+//------------------------------------------------------------------------------------------
 // Protected Methods
 //------------------------------------------------------------------------------------------
 
 void OBJState::resetAuxiliaryStates() 
 {
     m_RenderStates.clear();
-    m_RenderStates.reserve(50);                   // Arbitrary reserve
-    m_RenderStates.emplace_back(OBJRenderState());  // Set initial default state
+    m_RenderStates.reserve(50);                  // Arbitrary reserve
+    m_RenderStates.push_back(OBJRenderState());  // Set initial default state
+
+    m_FreeFormState.attributeStates.clear();
+    m_RenderStates.reserve(50);
+    m_FreeFormState.attributeStates.push_back(OBJFreeFormAttributeState());
 }
 
 void OBJState::transformVertexGroup(OBJVertexGroup& source) const
@@ -413,19 +634,35 @@ void OBJState::transformVertexGroup(OBJVertexGroup& source) const
     // Incoming indices may be negative.
     // We want to transform them so they are positive.
 
+    // They are also 1-based (no incoming index is 0), but 
+    // all standard containers are 0-based, so we also 
+    // transform them to be 0-base.
+
     if(source.indexSpatial < 0)
     {
-        source.indexSpatial += static_cast<int32_t>(m_VertexSpatialData.size()) + 1;  // +1 to maintain index 1-base
+        source.indexSpatial += static_cast<int32_t>(m_VertexSpatialData.size());
+    }
+    else
+    {
+        source.indexSpatial--;
     }
 
     if(source.indexTexture < 0)
     {
-        source.indexTexture += static_cast<int32_t>(m_VertexTextureData.size()) + 1;  // +1 to maintain index 1-base
+        source.indexTexture += static_cast<int32_t>(m_VertexTextureData.size());
+    }
+    else
+    {
+        source.indexTexture--;
     }
 
     if(source.indexNormal < 0)
     {
-        source.indexNormal += static_cast<int32_t>(m_VertexNormalData.size()) + 1;    // +1 to maintain index 1-base
+        source.indexNormal += static_cast<int32_t>(m_VertexNormalData.size());
+    }
+    else
+    {
+        source.indexNormal--;
     }
 }
 

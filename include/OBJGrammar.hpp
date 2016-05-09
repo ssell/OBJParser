@@ -46,7 +46,7 @@ class OBJGrammar : public qi::grammar<Iterator, Skipper>
 
 public:
 
-    OBJGrammar(OBJState* state) 
+    OBJGrammar(OBJState* state, bool useFreeForms) 
         : OBJGrammar::base_type(ruleStart),
           m_pOBJState(state)
     {
@@ -54,19 +54,31 @@ public:
         setupGroupRules();
         setupVertexRules();
         setupFaceRules();
-        setupFreeFormRules();
         setupMaterialRules();
         setupRenderStateRules();
 
         ruleEmptyLine = *(qi::blank) >> qi::eol;
 
-        ruleStart = +(ruleGroup       |
-                      ruleVertices    |
-                      ruleFaces       | 
-                      ruleFreeForms   |
-                      ruleMaterials   |
-                      ruleRenderState |
-                      ruleEmptyLine);
+        if(useFreeForms)
+        {
+            setupFreeFormRules();
+            ruleStart = +(ruleGroup       |
+                          ruleVertices    |
+                          ruleFaces       | 
+                          ruleFreeForms   |
+                          ruleMaterials   |
+                          ruleRenderState |
+                          ruleEmptyLine);
+        }
+        else
+        {
+            ruleStart = +(ruleGroup       |
+                          ruleVertices    |
+                          ruleFaces       | 
+                          ruleMaterials   |
+                          ruleRenderState |
+                          ruleEmptyLine);
+        }
     }
 
 protected:
@@ -84,6 +96,7 @@ protected:
 
         ruleIndexValue = qi::int_ | qi::attr(0);
         ruleVertexGroupData = ruleIndexValue >> -qi::omit[qi::char_('/')] >> ruleIndexValue >> -qi::omit[qi::char_('/')] >> ruleIndexValue;
+        ruleIndexList = +(qi::omit[qi::blank] >> ruleVertexGroupData);
 
         ruleName = +(qi::char_ - qi::space);
     }
@@ -161,11 +174,9 @@ protected:
         // Parses line lines. Example:
         // l 1/1 2/2 3/3 4/4 5/5 
 
-        ruleLineData = +(qi::omit[qi::blank] >> ruleVertexGroupData);
-
         ruleLine =
             qi::lit("l") >>
-            ruleLineData [boost::phoenix::bind(&OBJState::addLine, m_pOBJState, qi::_1)] >>
+            ruleIndexList [boost::phoenix::bind(&OBJState::addLine, m_pOBJState, qi::_1)] >>
             *(qi::char_ - qi::eol) >>
             qi::eol;
         
@@ -176,11 +187,9 @@ protected:
         // Parses point lines. Example:
         // p 1 2 3 4 5
         
-        rulePointData = +(qi::omit[qi::blank] >> ruleVertexGroupData);
-
         rulePoint =
             qi::lit("p") >>
-            rulePointData [boost::phoenix::bind(&OBJState::addPointCollection, m_pOBJState, qi::_1)] >>
+            ruleIndexList [boost::phoenix::bind(&OBJState::addPointCollection, m_pOBJState, qi::_1)] >>
             *(qi::char_ - qi::eol) >>
             qi::eol;
         
@@ -192,55 +201,289 @@ protected:
         setupFreeFormStart();
         setupFreeFormBody();
         setupFreeFormEnd();
+        setupFreeFormAttributes();
+        setupFreeFormConnections();
 
         ruleFreeForms =
-            ruleFreeFormStart >>
-            +(ruleFreeFormBody) >>
-            ruleFreeFormEnd;
+            ruleFreeFormAttributes | 
+            ruleFreeFormConnection |
+            (ruleFreeFormStart >>
+             +(ruleFreeFormBody) >>
+             ruleFreeFormEnd);
     }
 
     void setupFreeFormStart()
     {
+        //----------------------------------------------------------------
+        // Curve
+        //----------------------------------------------------------------
+
+        ruleFreeFormCurveData =
+            qi::float_ >>
+            qi::omit[qi::blank] >> 
+            qi::float_ >>
+            qi::omit[qi::blank] >> 
+            ruleIndexList;
+
         ruleFreeFormCurve =
-            qi::lit("curv") >>
-            qi::float_ >>              // starting param value
-            qi::float_ >>              // ending param value
-            qi::uint_ >>               // vertex indices (min two) ...
-            qi::uint_ >>
-            *(qi::uint_) >>
+            qi::lit("curv ") >>
+            ruleFreeFormCurveData [boost::phoenix::bind(&OBJState::addFreeFormCurve, m_pOBJState, qi::_1)] >>
+            *(qi::blank) >>
             qi::eol;
 
-        ruleFreeFormCurve2 =
+        //----------------------------------------------------------------
+        // Curve2D
+        //----------------------------------------------------------------
+
+        ruleFreeFormCurve2DData =
+            +(qi::omit[qi::blank] >> qi::int_);;
+
+        ruleFreeFormCurve2D =
             qi::lit("curv2") >>
-            qi::uint_ >>               // parameter indices (min two) ...
-            qi::uint_ >>
-            *(qi::uint_) >>
+            ruleFreeFormCurve2DData [boost::phoenix::bind(&OBJState::addFreeFormCurve2D, m_pOBJState, qi::_1)] >>
+            *(qi::blank) >>
             qi::eol;
+
+        //----------------------------------------------------------------
+        // Surface
+        //----------------------------------------------------------------
+
+        ruleFreeFormSurfaceData =
+            qi::float_ >>
+            qi::omit[qi::blank] >>
+            qi::float_ >>
+            qi::omit[qi::blank] >>
+            qi::float_ >>
+            qi::omit[qi::blank] >>
+            qi::float_ >>
+            qi::omit[qi::blank] >>
+            ruleVertexGroupData;
 
         ruleFreeFormSurface =
             qi::lit("surf") >>
-            qi::float_ >>              // starting param value for U
-            qi::float_ >>              // ending param value for U
-            qi::float_ >>              // starting param value for V
-            qi::float_ >>              // ending param value for V
-            ruleVertexGroupData >>     // vertex indices (#/#/# form)
+            ruleFreeFormSurfaceData [boost::phoenix::bind(&OBJState::addFreeFormSurface, m_pOBJState, qi::_1)] >>
+            *(qi::blank) >>
             qi::eol;
             
+        //----------------------------------------------------------------
+
         ruleFreeFormStart =
             (ruleFreeFormCurve |
-             ruleFreeFormCurve2 |
+             ruleFreeFormCurve2D |
              ruleFreeFormSurface);
     }
 
     void setupFreeFormBody()
     {
+        //----------------------------------------------------------------
+        // Parameters
+        //----------------------------------------------------------------
 
+        qi::rule<Iterator, std::vector<float>(), Skipper> ruleParameterData =
+            +(qi::omit[qi::blank] >> qi::float_);
+
+        Rule ruleParameterU =
+            qi::lit("u") >>
+            ruleParameterData [boost::phoenix::bind(&OBJState::addFreeFormParameterU, m_pOBJState, qi::_1)] >>
+            *(qi::blank) >>
+            qi::eol;
+
+        Rule ruleParameterV =
+            qi::lit("v") >>
+            ruleParameterData [boost::phoenix::bind(&OBJState::addFreeFormParameterU, m_pOBJState, qi::_1)] >>
+            *(qi::blank) >>
+            qi::eol;
+
+        ruleFreeFormParameter =
+            qi::lit("parm ") >>
+            (ruleParameterU | ruleParameterV);
+        
+        //----------------------------------------------------------------
+        // Trim
+        //----------------------------------------------------------------
+
+        qi::rule<Iterator, OBJSimpleCurve(), Skipper> ruleSimpleCurve =
+            qi::omit[qi::blank] >>
+            qi::float_ >>
+            qi::omit[qi::blank] >>
+            qi::float_ >>
+            qi::omit[qi::blank] >>
+            qi::int_;
+
+        ruleFreeFormTrim =
+            qi::lit("trim") >>
+            +(ruleSimpleCurve [boost::phoenix::bind(&OBJState::addFreeFormTrim, m_pOBJState, qi::_1)]) >>
+            *(qi::blank) >>
+            qi::eol;
+        
+        //----------------------------------------------------------------
+        // Hole
+        //----------------------------------------------------------------
+
+        ruleFreeFormHole =
+            qi::lit("hole") >>
+            +(ruleSimpleCurve [boost::phoenix::bind(&OBJState::addFreeFormHole, m_pOBJState, qi::_1)]) >>
+            *(qi::blank) >>
+            qi::eol;
+        
+        //----------------------------------------------------------------
+        // Special Curve
+        //----------------------------------------------------------------
+
+        ruleFreeFormTrim =
+            qi::lit("scrv") >>
+            +(ruleSimpleCurve [boost::phoenix::bind(&OBJState::addFreeFormSpecialCurve, m_pOBJState, qi::_1)]) >>
+            *(qi::blank) >>
+            qi::eol;
+        
+        //----------------------------------------------------------------
+        // Special Point
+        //----------------------------------------------------------------
+        
+        qi::rule<Iterator, std::vector<int32_t>(), Skipper> ruleSpecialPointsData =
+            +(qi::omit[qi::blank] >> qi::int_);
+
+        ruleFreeFormSpecialPoint = 
+            qi::lit("sp") >>
+            ruleSpecialPointsData [boost::phoenix::bind(&OBJState::addFreeFormSpecialPoints, m_pOBJState, qi::_1)] >>
+            *(qi::blank) >>
+            qi::eol;
+
+        //----------------------------------------------------------------
+
+        ruleFreeFormBody = 
+            (ruleFreeFormParameter |
+             ruleFreeFormTrim |
+             ruleFreeFormHole |
+             ruleFreeFormSpecialCurve |
+             ruleFreeFormSpecialPoint);
     }
 
     void setupFreeFormEnd()
     {
         ruleFreeFormEnd =
             qi::lit("end") >>
+            *(qi::blank) >>
+            qi::eol;
+    }
+
+    void setupFreeFormAttributes()
+    {
+        //----------------------------------------------------------------
+        // Type
+        //----------------------------------------------------------------
+
+        qi::rule<Iterator, bool(), Skipper> ruleFreeFormRational =
+            (qi::omit[qi::lit(" rat")] [qi::_val = true] |
+            (qi::attr(false)));
+
+        Rule ruleTypes =
+            (qi::lit(" bmatrix")  [boost::phoenix::bind(&OBJState::setFreeFormType, m_pOBJState, OBJFreeFormType::BasisMatrix)] |
+             qi::lit(" bezier")   [boost::phoenix::bind(&OBJState::setFreeFormType, m_pOBJState, OBJFreeFormType::Bezier)]      |
+             qi::lit(" bspline")  [boost::phoenix::bind(&OBJState::setFreeFormType, m_pOBJState, OBJFreeFormType::BSpline)]     |
+             qi::lit(" cardinal") [boost::phoenix::bind(&OBJState::setFreeFormType, m_pOBJState, OBJFreeFormType::Cardinal)]    |
+             qi::lit(" taylor")   [boost::phoenix::bind(&OBJState::setFreeFormType, m_pOBJState, OBJFreeFormType::Taylor)]);
+
+        ruleFreeFormType =
+            qi::lit("cstype") >>
+            ruleFreeFormRational [boost::phoenix::bind(&OBJState::setFreeFormRational, m_pOBJState, qi::_1)] >>
+            ruleTypes >>
+            *(qi::blank) >>
+            qi::eol;
+
+        //----------------------------------------------------------------
+        // Degree
+        //----------------------------------------------------------------
+
+        ruleFreeFormDegree = 
+            qi::lit("deg ") >>
+            qi::int_ [boost::phoenix::bind(&OBJState::setFreeFormDegreeU, m_pOBJState, qi::_1)] >>
+            -(qi::omit[qi::blank] >> 
+              qi::int_ [boost::phoenix::bind(&OBJState::setFreeFormDegreeV, m_pOBJState, qi::_1)]) >>
+            *(qi::blank) >>
+            qi::eol;
+
+        //----------------------------------------------------------------
+        // Step
+        //----------------------------------------------------------------
+
+        ruleFreeFormDegree = 
+            qi::lit("step ") >>
+            qi::int_ [boost::phoenix::bind(&OBJState::setFreeFormStepU, m_pOBJState, qi::_1)] >>
+            -(qi::omit[qi::blank] >> 
+              qi::int_ [boost::phoenix::bind(&OBJState::setFreeFormStepV, m_pOBJState, qi::_1)]) >>
+            *(qi::blank) >>
+            qi::eol;
+
+        //----------------------------------------------------------------
+        // Basis Matrix
+        //----------------------------------------------------------------
+
+        qi::rule<Iterator, std::vector<float>(), Skipper> ruleMatrixData =
+            +(qi::skip[qi::blank] >> qi::float_);
+
+        qi::rule<Iterator, Skipper> ruleBasisU =
+            qi::lit(" u") >>
+            ruleMatrixData [boost::phoenix::bind(&OBJState::setFreeFormBasisMatrixU, m_pOBJState, qi::_1)] >>
+            *(qi::blank) >>
+            qi::eol;
+
+        qi::rule<Iterator, Skipper> ruleBasisV =
+            qi::lit(" v") >>
+            ruleMatrixData [boost::phoenix::bind(&OBJState::setFreeFormBasisMatrixV, m_pOBJState, qi::_1)] >>
+            *(qi::blank) >>
+            qi::eol;
+        
+        ruleFreeFormBasisMatrix = 
+            qi::lit("bmat") >>
+            (ruleBasisU | 
+             ruleBasisV);
+
+        //----------------------------------------------------------------
+        // Merge Group
+        //----------------------------------------------------------------
+
+        ruleFreeFormMergeGroup =
+            qi::lit("mg ") >>
+            qi::int_ [boost::phoenix::bind(&OBJState::setFreeFormMergeGroupNumber, m_pOBJState, qi::_1)] >>
+            qi::omit[qi::blank] >>
+            qi::float_ [boost::phoenix::bind(&OBJState::setFreeFormMergeGroupResolution, m_pOBJState, qi::_1)] >> 
+            *(qi::blank) >>
+            qi::eol;
+
+        //----------------------------------------------------------------
+
+        ruleFreeFormAttributes = 
+            (ruleFreeFormType |
+             ruleFreeFormDegree |
+             ruleFreeFormStep |
+             ruleFreeFormBasisMatrix |
+             ruleFreeFormMergeGroup);
+    }
+
+    void setupFreeFormConnections()
+    {
+        qi::rule<Iterator, OBJSurfaceConnection(), Skipper> ruleConnectionData =
+            qi::int_ >>                // surface1
+            qi::omit[qi::blank] >>
+            qi::float_ >>              // startParam1
+            qi::omit[qi::blank] >>
+            qi::float_ >>              // endParam1
+            qi::omit[qi::blank] >>
+            qi::int_ >>                // curve2D1
+            qi::omit[qi::blank] >>
+            qi::int_ >>                // surface2
+            qi::omit[qi::blank] >>
+            qi::float_ >>              // startParam2
+            qi::omit[qi::blank] >>
+            qi::float_ >>              // endParam2
+            qi::omit[qi::blank] >>
+            qi::int_;                  // curve2D2
+
+        ruleFreeFormConnection = 
+            qi::lit("con ") >>
+            ruleConnectionData [boost::phoenix::bind(&OBJState::addFreeFormConnection, m_pOBJState, qi::_1)] >>
+            *(qi::blank) >>
             qi::eol;
     }
 
@@ -430,6 +673,7 @@ protected:
     qi::rule<Iterator, OBJVector4(), Skipper> ruleVector4Data;            ///< Parses "#.# #.# #.# #.#" where the fourth element is optional (v)
     qi::rule<Iterator, OBJVertexGroup(), Skipper> ruleVertexGroupData;    ///< Parses "#/#/#" of vertex group declarations. Secondary elements (and their slashes) are optional.
     qi::rule<Iterator, int32_t(), Skipper> ruleIndexValue;
+    qi::rule<Iterator, std::vector<OBJVertexGroup>(), Skipper> ruleIndexList;
     qi::rule<Iterator, std::string(), Skipper> ruleName;
 
     //--------------------------------------------------------------------
@@ -448,10 +692,7 @@ protected:
     qi::rule<Iterator, OBJFace(), Skipper> ruleFaceData;
     qi::rule<Iterator, Skipper> ruleFace;
 
-    qi::rule<Iterator, std::vector<OBJVertexGroup>(), Skipper> ruleLineData;
     qi::rule<Iterator, Skipper> ruleLine;
-
-    qi::rule<Iterator, std::vector<OBJVertexGroup>(), Skipper> rulePointData;
     qi::rule<Iterator, Skipper> rulePoint;
 
     //--------------------------------------------------------------------
@@ -462,10 +703,15 @@ protected:
     
     qi::rule<Iterator, Skipper> ruleFreeFormStart;
 
-    qi::rule<Iterator, Skipper> ruleFreeFormCurve;         
-    qi::rule<Iterator, Skipper> ruleFreeFormCurve2;  
+    qi::rule<Iterator, Skipper> ruleFreeFormCurve;  
+    qi::rule<Iterator, OBJCurve(), Skipper> ruleFreeFormCurveData;
+
+    qi::rule<Iterator, Skipper> ruleFreeFormCurve2D;  
+    qi::rule<Iterator, std::vector<int32_t>(), Skipper> ruleFreeFormCurve2DData;
+
     qi::rule<Iterator, Skipper> ruleFreeFormSurface; 
-    
+    qi::rule<Iterator, OBJSurface(), Skipper> ruleFreeFormSurfaceData;
+
     // body statements (may only appear between start and end statements)
 
     qi::rule<Iterator, Skipper> ruleFreeFormBody;
@@ -475,19 +721,24 @@ protected:
     qi::rule<Iterator, Skipper> ruleFreeFormHole;            // hole
     qi::rule<Iterator, Skipper> ruleFreeFormSpecialCurve;    // scrv
     qi::rule<Iterator, Skipper> ruleFreeFormSpecialPoint;    // sp
-    
+
     // end statement
 
     qi::rule<Iterator, Skipper> ruleFreeFormEnd;
     
-    // state statements
-    
-    qi::rule<Iterator, Skipper> ruleFreeFormCSType;          // cstype
-    qi::rule<Iterator, Skipper> ruleFreeFormCTech;           // ctech
-    qi::rule<Iterator, Skipper> ruleFreeFormSTech;           // stech
+    // attribute statements
+
+    qi::rule<Iterator, Skipper> ruleFreeFormAttributes;
+
+    qi::rule<Iterator, Skipper> ruleFreeFormType;            // cstype
     qi::rule<Iterator, Skipper> ruleFreeFormDegree;          // deg
-    qi::rule<Iterator, Skipper> ruleFreeFormBasisMatrix;     // bmat
     qi::rule<Iterator, Skipper> ruleFreeFormStep;            // step
+    qi::rule<Iterator, Skipper> ruleFreeFormBasisMatrix;     // bmat
+    qi::rule<Iterator, Skipper> ruleFreeFormMergeGroup;      // mg
+
+    // connections
+
+    qi::rule<Iterator, Skipper> ruleFreeFormConnection;      // con
 
     //--------------------------------------------------------------------
     // Material Rules

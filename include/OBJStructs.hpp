@@ -31,8 +31,8 @@
  */
 struct OBJVector2
 {
-    OBJVector2() : x(0.0f), y(0.0f) { }
-    OBJVector2 const& operator=(OBJVector2 const& rhs) { x = rhs.x; y = rhs.y; return (*this); }
+    OBJVector2();
+    OBJVector2 const& operator=(OBJVector2 const& rhs);
 
     union { float x, r, u, s; };
     union { float y, g, v, t; };
@@ -48,8 +48,8 @@ BOOST_FUSION_ADAPT_STRUCT(OBJVector2, (float, x), (float, y))
  */
 struct OBJVector3
 {
-    OBJVector3() : x(0.0f), y(0.0f), z(0.0f) { }
-    OBJVector3 const& operator=(OBJVector3 const& rhs) { x = rhs.x; y = rhs.y; z = rhs.z; return (*this); }
+    OBJVector3();
+    OBJVector3 const& operator=(OBJVector3 const& rhs);
 
     union { float x, r, u, s; };
     union { float y, g, v, t; };
@@ -66,8 +66,8 @@ BOOST_FUSION_ADAPT_STRUCT(OBJVector3, (float, x), (float, y), (float, z))
  */
  struct OBJVector4
  {
-    OBJVector4() : x(0.0f), y(0.0f), z(0.0f), w(1.0f) { }
-    OBJVector4 const& operator=(OBJVector4 const& rhs) { x = rhs.x; y = rhs.y; z = rhs.z; w = rhs.w; return (*this); }
+    OBJVector4();
+    OBJVector4 const& operator=(OBJVector4 const& rhs);
 
     union { float x, r, u, s; };
     union { float y, g, v, t; };
@@ -83,19 +83,18 @@ BOOST_FUSION_ADAPT_STRUCT(OBJVector4, (float, x), (float, y), (float, z), (float
  * \struct OBJVertexGroup
  * \brief Index pairing comprising a single vertex of a face.
  *
- * Raw OBJ vertex indices are 1-based and that is maintained inside of this struct.
+ * Raw OBJ vertex indices may be negative and are 1-based. However, to keep use of 
+ * the API easier and more compliant with standards, all indices are transformed to
+ * be positive only and 0-based.
  *
- * An index with value 0 indicates that the index is unspecified and thus unused.
- * If the spatial index is 0, then the entire grouping is unused. This may occur
- * if face data is provided as triangles and thus the fourth group in the OBJFace
- * struct is not needed.
+ * With these changes, indices may be used directly within vertex data containers
+ * to retrieve the associated vertex element.
  *
- * OBJ vertex indices may also be negative, but all indices in this struct have
- * been transformed and are positive.
+ * A negative vertex indicates that it is not in use.
  */
 struct OBJVertexGroup
 { 
-    OBJVertexGroup() : indexSpatial(0), indexTexture(0), indexNormal(0) { }
+    OBJVertexGroup();
 
     int32_t indexSpatial;
     int32_t indexTexture;
@@ -116,18 +115,14 @@ BOOST_FUSION_ADAPT_STRUCT(OBJVertexGroup, (int32_t, indexSpatial), (int32_t, ind
  *    - Quad
  *
  * You can check what is represented by seeing which vertex groups are in use.
- * A vertex group is in use if it's indexSpatial element is not 0.
+ * A vertex group is in use if it's indexSpatial element is positive.
  * 
  * If all groups are in use, then the face is a quad. <br/>
  * If group3 is not in use, then the face is a triangle.
  */
 struct OBJFace
 {
-    OBJFace()
-        : renderState(0)
-    {
-    
-    }
+    OBJFace();
 
     //--------------------------------------------------------------------
 
@@ -151,16 +146,8 @@ BOOST_FUSION_ADAPT_STRUCT(OBJFace, (OBJVertexGroup, group0), (OBJVertexGroup, gr
  */
 struct OBJLine
 {
-    OBJLine() 
-    { 
-
-    }
-
-    OBJLine(std::vector<OBJVertexGroup> const& vector)
-    {
-        segments.reserve(segments.size() + vector.size());
-        segments.insert(segments.end(), vector.begin(), vector.end());
-    }
+    OBJLine();
+    OBJLine(std::vector<OBJVertexGroup> const& vector);
 
     std::vector<OBJVertexGroup> segments;
 };
@@ -177,16 +164,8 @@ BOOST_FUSION_ADAPT_STRUCT(OBJLine, (std::vector<OBJVertexGroup>, segments))
  */
 struct OBJPoint
 {
-    OBJPoint() 
-    { 
-
-    }
-
-    OBJPoint(std::vector<OBJVertexGroup> const& vector)
-    {
-        points.reserve(points.size() + vector.size());
-        points.insert(points.end(), vector.begin(), vector.end());
-    }
+    OBJPoint(); 
+    OBJPoint(std::vector<OBJVertexGroup> const& vector);
 
     std::vector<OBJVertexGroup> points;
 };
@@ -201,11 +180,17 @@ BOOST_FUSION_ADAPT_STRUCT(OBJPoint, (std::vector<OBJVertexGroup>, points))
  */
 struct OBJSimpleCurve
 {
+    OBJSimpleCurve();
+
     float startParam;             ///< Starting parameter value for the trimming curve
     float endParam;               ///< Ending parameter value for the trimming curve
 
-    uint32_t curve2DIndex;        ///< Index of the OBJCurve2D special curve lying in the parameter space of the surface
+    int32_t curve2DIndex;         ///< Index of the OBJCurve2D special curve lying in the parameter space of the surface
 };
+
+BOOST_FUSION_ADAPT_STRUCT(OBJSimpleCurve, (float, startParam), (float, endParam), (int32_t, curve2DIndex))
+
+//------------------------------------------------------------------------------------------
 
 /**
  * \struct OBJFreeForm
@@ -213,15 +198,23 @@ struct OBJSimpleCurve
  */
 struct OBJFreeForm
 {
-    std::vector<float> parametersU;         ///< Parameter values for the U direction
-    std::vector<float> parametersV;         ///< Parameter vlaues for the V direction
-    
-    std::vector<OBJSimpleCurve> trims;      ///< A sequence of curves to build a single outer trimming loop
-    std::vector<OBJSimpleCurve> holes;      ///< A sequence of curves to build a single inner trimming loop (hole)
-    std::vector<OBJSimpleCurve> special;    ///< A sequence of curves to build a single special curve
+    OBJFreeForm();
 
-    std::vector<uint32_t> specialPoints;    ///< Special geometric points to be associated with a curve or surface
+    //--------------------------------------------------------------------
+
+    uint32_t attributeState;                    ///< The active free-form attribute state when this object was created. See OBJState::getFreeFormState
+
+    std::vector<float> parametersU;             ///< Parameter values for the U direction
+    std::vector<float> parametersV;             ///< Parameter vlaues for the V direction
+    
+    std::vector<OBJSimpleCurve> trims;          ///< A sequence of curves to build a single outer trimming loop
+    std::vector<OBJSimpleCurve> holes;          ///< A sequence of curves to build a single inner trimming loop (hole)
+    std::vector<OBJSimpleCurve> specialCurves;  ///< A sequence of curves to build a single special curve
+
+    std::vector<int32_t> specialPoints;         ///< Special geometric points to be associated with a curve or surface
 };
+
+//------------------------------------------------------------------------------------------
 
 /**
  * \struct OBJCurve
@@ -229,26 +222,49 @@ struct OBJFreeForm
  */
 struct OBJCurve : public OBJFreeForm
 {
+    OBJCurve();
+    OBJCurve(float start, float end, std::vector<OBJVertexGroup> const& points);
+
+    //--------------------------------------------------------------------
+
     float startParam;
     float endParam;
 
     std::vector<OBJVertexGroup> controlPoints;
 };
 
+BOOST_FUSION_ADAPT_STRUCT(OBJCurve, (float, startParam), (float, endParam), (std::vector<OBJVertexGroup>, controlPoints))
+
+//------------------------------------------------------------------------------------------
+
 /**
  * \struct OBJCurve2D
  * \brief A 2D curve on a surface
  */
-struct OBJCurve2 : public OBJFreeForm
+struct OBJCurve2D : public OBJFreeForm
 {
-    std::vector<uint32_t> parameterVertexIndices;
+    OBJCurve2D(); 
+    OBJCurve2D(std::vector<int32_t> const& points);
+    
+    //--------------------------------------------------------------------
+
+    std::vector<int32_t> parameterVertexIndices;
 };
+
+BOOST_FUSION_ADAPT_STRUCT(OBJCurve2D, (std::vector<int32_t>, parameterVertexIndices))
+
+//------------------------------------------------------------------------------------------
 
 /**
  * \struct OBJSurface
  */
 struct OBJSurface : public OBJFreeForm
 {
+    OBJSurface(); 
+    OBJSurface(float startU, float endU, float startV, float endV, std::vector<OBJVertexGroup> const& points);
+
+    //--------------------------------------------------------------------
+
     float startParamU;
     float endParamU;
 
@@ -257,6 +273,40 @@ struct OBJSurface : public OBJFreeForm
 
     std::vector<OBJVertexGroup> controlPoints;
 };
+
+BOOST_FUSION_ADAPT_STRUCT(OBJSurface, (float, startParamU), (float, endParamU), (float, startParamV), (float, endParamV), (std::vector<OBJVertexGroup>, controlPoints))
+
+//------------------------------------------------------------------------------------------
+
+/**
+ * \struct OBJSurfaceConnection
+ * \brief Specifies connectivity between two different surfaces.
+ */
+struct OBJSurfaceConnection
+{
+    OBJSurfaceConnection();
+    OBJSurfaceConnection(int32_t surf1, float startParam1, float endParam1, int32_t curv2D1, int32_t surf2, float startParam2, float endParam2, int32_t curv2D2);
+
+    //--------------------------------------------------------------------
+
+    int32_t surfaceIndex0;        ///< Index of the first surface to be connected. See OBJFreeFormState::surfaces member.
+    int32_t surfaceIndex1;        ///< Index of the second surface to be connected. See OBJFreeFormState::surfaces member.
+
+    int32_t curve2DIndex0;        ///< Index of the Curve2D on the first surface that is part of the connection.
+    int32_t curve2DIndex1;        ///< Index of the Curve2D on the second surface that is part of the connection.
+
+    float startParam0;            ///< Starting parameter for the first Curve2D.
+    float endParam0;              ///< Ending parameter for the first Curve2D.
+
+    float startParam1;            ///< Starting parameter for the second Curve2D.
+    float endParam1;              ///< Ending parameter for the second Curve2D.
+};
+
+BOOST_FUSION_ADAPT_STRUCT(OBJSurfaceConnection, 
+    (int32_t, surfaceIndex0), (float, startParam0), (float, endParam0), (int32_t, curve2DIndex0), 
+    (int32_t, surfaceIndex1), (float, startParam1), (float, endParam1), (int32_t, curve2DIndex1))
+
+//------------------------------------------------------------------------------------------
 
 #endif
 
