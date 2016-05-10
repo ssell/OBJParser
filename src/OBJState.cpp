@@ -110,6 +110,17 @@ std::vector<std::string> const* OBJState::getMaterialLibraries() const
     return &m_MaterialLibraries;
 }
 
+void OBJState::getMaterials(std::vector<OBJMaterial const*>& materials) const
+{
+    materials.clear();
+    materials.reserve(m_MaterialMap.size());
+
+    for(auto iter = m_MaterialMap.begin(); iter != m_MaterialMap.end(); ++iter)
+    {
+        materials.push_back(&(*iter).second);
+    }
+}
+
 void OBJState::clearActiveGroups()
 {
     for(auto iter = m_ActiveGroups.begin(); iter != m_ActiveGroups.end(); ++iter)

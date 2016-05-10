@@ -115,6 +115,8 @@ protected:
     qi::rule<OBJIterator, OBJMaterialDissolve(), MTLSkipper> ruleDissolveData;
     qi::rule<OBJIterator, MTLSkipper> ruleDissolve;
 
+    qi::rule<OBJIterator, MTLSkipper> ruleTransparency;
+
     qi::rule<OBJIterator, MTLSkipper> ruleSpecularExponent;
     qi::rule<OBJIterator, MTLSkipper> ruleSharpness;
     qi::rule<OBJIterator, MTLSkipper> ruleOpticalDensity;

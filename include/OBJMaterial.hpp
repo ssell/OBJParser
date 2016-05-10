@@ -178,6 +178,11 @@ public:
     void setDissolve(OBJMaterialDissolve const& dissolve);
     OBJMaterialDissolve const& getDissolve() const;
 
+    // Transparency (inverse of dissolve)
+
+    void setTransparency(float transparency);
+    float getTransparency() const;
+
     // Illumination Model
 
     void setIlluminationModel(uint32_t model);
@@ -280,6 +285,7 @@ protected:
     uint32_t m_IlluminationModel;   ///< Value between 0 and 10 corresponding to an illumination model. See MTL specification for model details.
     uint32_t m_Sharpness;           ///< Sharpness of reflections. Higher values result in sharper reflections. Typical range of (0 - 1000); Default of 60
     
+    float m_Transparency;           ///< Optional value set by certain writers. Typically is the inverse of the 'dissolve' value.
     float m_SpecularExponent;       ///< Focus of the specular highlight. Higher values result in tighter highlights. Typical range (0.0 - 1000.0)
     float m_OpticalDensity;         ///< AKA index of refraction. Range (0.001 - 10.0). 1.0 indicates light does not bend as it passes through. Glass is 1.5
 

@@ -23,7 +23,7 @@
 MTLGrammarSkipper::MTLGrammarSkipper()
     : MTLGrammarSkipper::base_type(ruleSkip)
 {
-    ruleSkip = qi::blank | (qi::char_('#') >> *(qi::char_ - qi::eol) >> qi::eol);
+    ruleSkip = qi::blank | ((qi::char_('#') >> *(qi::char_ - qi::eol) >> qi::eol));
 }
 
 //------------------------------------------------------------------------------------------

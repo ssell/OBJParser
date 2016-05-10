@@ -21,7 +21,7 @@
 // Constructors
 //------------------------------------------------------------------------------------------
 
-OBJGrammar::OBJGrammar(OBJState* state, bool useFreeForms) 
+OBJGrammar::OBJGrammar(OBJState* state) 
     : OBJGrammar::base_type(ruleStart),
       m_pOBJState(state)
 {
@@ -31,25 +31,15 @@ OBJGrammar::OBJGrammar(OBJState* state, bool useFreeForms)
     setupFaceRules();
     setupMaterialRules();
     setupRenderStateRules();
+    setupFreeFormRules();
 
-    if(useFreeForms)
-    {
-        setupFreeFormRules();
-        ruleStart = +(ruleGroup       |
-                      ruleVertices    |
-                      ruleFaces       | 
-                      ruleFreeForms   |
-                      ruleMaterials   |
-                      ruleRenderState);
-    }
-    else
-    {
-        ruleStart = +(ruleGroup       |
-                      ruleVertices    |
-                      ruleFaces       | 
-                      ruleMaterials   |
-                      ruleRenderState);
-    }
+    ruleStart = +(ruleGroup       |
+                  ruleVertices    |
+                  ruleFaces       | 
+                  ruleFreeForms   |
+                  ruleMaterials   |
+                  ruleRenderState |
+                  qi::eol);
 }
 
 //------------------------------------------------------------------------------------------

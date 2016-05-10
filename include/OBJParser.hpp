@@ -112,17 +112,6 @@ public:
     OBJState* getOBJState();
 
     /**
-     * If enabled, free-form statements will be aniticipated and parsed.
-     * Enabling this may cause a decrease in parsing performance.
-     *
-     * If disabled and a free-form statement is encountered, then parsing
-     * will fail. By default, this setting is disabled.
-     *
-     * \param[in] enable
-     */
-    void enableFreeFormParsing(bool enable);
-
-    /**
      * \return Human-readable string description of last error encountered.
      */
     std::string const& getLastError() const;
@@ -145,8 +134,6 @@ protected:
     OBJState m_OBJState;          ///< Internal OBJ state
 
     std::string m_LastError;      ///< String representation of last error
-
-    bool m_ParseFreeForm;
 
 private:
 };

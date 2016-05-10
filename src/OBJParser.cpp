@@ -29,8 +29,7 @@
 //------------------------------------------------------------------------------------------
 
 OBJParser::OBJParser()
-    : m_LastError("No Error"),
-      m_ParseFreeForm(false)
+    : m_LastError("No Error")
 {
 
 }
@@ -71,11 +70,6 @@ OBJState* OBJParser::getOBJState()
     return &m_OBJState;
 }
 
-void OBJParser::enableFreeFormParsing(bool enable)
-{
-    m_ParseFreeForm = enable;
-}
-
 std::string const& OBJParser::getLastError() const
 {
     return m_LastError;
@@ -94,58 +88,71 @@ OBJParser::Result OBJParser::parseOBJFilefstream(std::string const& path)
     //--------------------------------------------------------------------
     // Parse the OBJ file
     //--------------------------------------------------------------------
-
-    std::ifstream stream(path.c_str());
-
-    if(stream.is_open())
+    
+    std::ifstream stream;
+    
+    try
     {
-        stream >> std::noskipws;
+        stream.open(path.c_str());
+    }
+    catch(std::exception const& e)
+    {
+        result = OBJParser::Result::FailedOBJFileRead;
+        m_LastError = "Failed to open file '" + path + "' with error: " + e.what();
+    }
 
-        using Iterator = boost::spirit::istream_iterator;
-
-        Iterator first(stream);
-        Iterator last;
-
-        OBJGrammar<Iterator> grammar(&m_OBJState, m_ParseFreeForm);
-        OBJCommentSkipper<Iterator> skipper;
-
-        if(qi::phrase_parse(first, last, grammar, skipper))
+    if(result == OBJParser::Result::Success)
+    {
+        if(stream.is_open())
         {
-            if(first != last)
+            stream >> std::noskipws;
+
+            using Iterator = boost::spirit::istream_iterator;
+
+            Iterator first(stream);
+            Iterator last;
+
+            OBJGrammar<Iterator> grammar(&m_OBJState, m_ParseFreeForm);
+            OBJCommentSkipper<Iterator> skipper;
+
+            if(qi::phrase_parse(first, last, grammar, skipper))
+            {
+                if(first != last)
+                {
+                    result = OBJParser::Result::FailedOBJParseError;
+                    m_LastError = "Failed to parse line '" + extractLastLine(stream) + "' in file '" + path + "'";
+                }
+            }
+            else
             {
                 result = OBJParser::Result::FailedOBJParseError;
                 m_LastError = "Failed to parse line '" + extractLastLine(stream) + "' in file '" + path + "'";
             }
+
+            stream.close();
         }
         else
         {
-            result = OBJParser::Result::FailedOBJParseError;
-            m_LastError = "Failed to parse line '" + extractLastLine(stream) + "' in file '" + path + "'";
+            result = OBJParser::Result::FailedOBJFileRead;
+            m_LastError = "Failed to open file '" + path + "'";
         }
 
-        stream.close();
-    }
-    else
-    {
-        result = OBJParser::Result::FailedOBJFileRead;
-        m_LastError = "Failed to open file '" + path + "'";
-    }
+        //--------------------------------------------------------------------
+        // Parse the MTL file (if any specified)
+        //--------------------------------------------------------------------
 
-    //--------------------------------------------------------------------
-    // Parse the MTL file (if any specified)
-    //--------------------------------------------------------------------
-
-    if(result == OBJParser::Result::Success)
-    {
-        auto materialLibraries = m_OBJState.getMaterialLibraries();
-
-        for(auto mtlPath : *materialLibraries)
+        if(result == OBJParser::Result::Success)
         {
-            result = parseMTLFilefstream(buildRelativeMTLPath(path, mtlPath));
+            auto materialLibraries = m_OBJState.getMaterialLibraries();
 
-            if(result != OBJParser::Result::Success)
+            for(auto mtlPath : *materialLibraries)
             {
-                break;
+                result = parseMTLFilefstream(buildRelativeMTLPath(path, mtlPath));
+
+                if(result != OBJParser::Result::Success)
+                {
+                    break;
+                }
             }
         }
     }
@@ -159,44 +166,58 @@ OBJParser::Result OBJParser::parseMTLFilefstream(std::string const& path)
     OBJParser::Result result = OBJParser::Result::Success;
 
 #ifndef OBJ_PARSER_USE_MEM_MAP
-    std::ifstream stream(path.c_str());
 
-    if(stream.is_open())
+    std::ifstream stream;
+    
+    try
     {
-        stream >> std::noskipws;
+        stream.open(path.c_str());
+    }
+    catch(std::exception const& e)
+    {
+        result = OBJParser::Result::FailedMTLFileRead;
+        m_LastError = "Failed to open file '" + path + "' with error: " + e.what();
+    }
 
-        using Iterator = boost::spirit::istream_iterator;
-
-        Iterator first(stream);
-        Iterator last;
-
-        MTLGrammar<Iterator> grammar(&m_OBJState);
-        MTLGrammarSkipper<Iterator> skipper;
-
-        if(qi::phrase_parse(first, last, grammar, skipper))
+    if(result == OBJParser::Result::Success)
+    {
+        if(stream.is_open())
         {
-            if(first == last)
+            stream >> std::noskipws;
+
+            using Iterator = boost::spirit::istream_iterator;
+
+            Iterator first(stream);
+            Iterator last;
+
+            MTLGrammar<Iterator> grammar(&m_OBJState);
+            MTLGrammarSkipper<Iterator> skipper;
+
+            if(qi::phrase_parse(first, last, grammar, skipper))
             {
-                grammar.finishCurrentMaterial();
+                if(first == last)
+                {
+                    grammar.finishCurrentMaterial();
+                }
+                else
+                {
+                    result = OBJParser::Result::FailedOBJParseError;
+                    m_LastError = "Failed to parse line '" + extractLastLine(stream) + "' in file '" + path + "'";
+                }
             }
             else
             {
                 result = OBJParser::Result::FailedOBJParseError;
                 m_LastError = "Failed to parse line '" + extractLastLine(stream) + "' in file '" + path + "'";
             }
+
+            stream.close();
         }
         else
         {
-            result = OBJParser::Result::FailedOBJParseError;
-            m_LastError = "Failed to parse line '" + extractLastLine(stream) + "' in file '" + path + "'";
+            result = OBJParser::Result::FailedMTLFileRead;
+            m_LastError = "Failed to open file '" + path + "'";
         }
-
-        stream.close();
-    }
-    else
-    {
-        result = OBJParser::Result::FailedMTLFileRead;
-        m_LastError = "Failed to open file '" + path + "'";
     }
 #endif
 
@@ -214,54 +235,67 @@ OBJParser::Result OBJParser::parseOBJFileMemMap(std::string const& path)
     // Parse the OBJ file
     //--------------------------------------------------------------------
 
-    boost::iostreams::mapped_file mappedFile(path, boost::iostreams::mapped_file::readonly);
+    boost::iostreams::mapped_file mappedFile;
 
-    if(mappedFile.is_open())
+    try
     {
-        auto first = mappedFile.const_data();
-        auto last = first + mappedFile.size();
+        mappedFile.open(path, boost::iostreams::mapped_file::readonly);
+    }
+    catch(std::exception const& e)
+    {
+        result = OBJParser::Result::FailedOBJFileRead;
+        m_LastError = "Failed to open file '" + path + "' with error: " + e.what();
+    }
 
-        using Iterator = decltype(first);
-        OBJGrammar grammar(&m_OBJState, m_ParseFreeForm);
-        OBJGrammarSkipper skipper;
-
-        if(qi::phrase_parse(first, last, grammar, skipper))
+    if(result == OBJParser::Result::Success)
+    {
+        if(mappedFile.is_open())
         {
-            if(first != last)
+            auto first = mappedFile.const_data();
+            auto last = first + mappedFile.size();
+
+            using Iterator = decltype(first);
+            OBJGrammar grammar(&m_OBJState);
+            OBJGrammarSkipper skipper;
+
+            if(qi::phrase_parse(first, last, grammar, skipper))
+            {
+                if(first != last)
+                {
+                    result = OBJParser::Result::FailedOBJParseError;
+                    m_LastError = "Failed to parse line '" + extractLastLine(first) + "' in file '" + path + "'";
+                }
+            }
+            else
             {
                 result = OBJParser::Result::FailedOBJParseError;
                 m_LastError = "Failed to parse line '" + extractLastLine(first) + "' in file '" + path + "'";
             }
+
+            mappedFile.close();
         }
         else
         {
-            result = OBJParser::Result::FailedOBJParseError;
-            m_LastError = "Failed to parse line '" + extractLastLine(first) + "' in file '" + path + "'";
+            result = OBJParser::Result::FailedOBJFileRead;
+            m_LastError = "Failed to open file '" + path + "'";
         }
 
-        mappedFile.close();
-    }
-    else
-    {
-        result = OBJParser::Result::FailedOBJFileRead;
-        m_LastError = "Failed to open file '" + path + "'";
-    }
+        //--------------------------------------------------------------------
+        // Parse the MTL file (if any specified)
+        //--------------------------------------------------------------------
 
-    //--------------------------------------------------------------------
-    // Parse the MTL file (if any specified)
-    //--------------------------------------------------------------------
-
-    if(result == OBJParser::Result::Success)
-    {
-        auto materialLibraries = m_OBJState.getMaterialLibraries();
-
-        for(auto mtlPath : *materialLibraries)
+        if(result == OBJParser::Result::Success)
         {
-            result = parseMTLFileMemMap(buildRelativeMTLPath(path, mtlPath));
+            auto materialLibraries = m_OBJState.getMaterialLibraries();
 
-            if(result != OBJParser::Result::Success)
+            for(auto mtlPath : *materialLibraries)
             {
-                break;
+                result = parseMTLFileMemMap(buildRelativeMTLPath(path, mtlPath));
+
+                if(result != OBJParser::Result::Success)
+                {
+                    break;
+                }
             }
         }
     }
@@ -276,40 +310,53 @@ OBJParser::Result OBJParser::parseMTLFileMemMap(std::string const& path)
 
 #ifdef OBJ_PARSER_USE_MEM_MAP
 
-    boost::iostreams::mapped_file mappedFile(path, boost::iostreams::mapped_file::readonly);
+    boost::iostreams::mapped_file mappedFile;
 
-    if(mappedFile.is_open())
+    try
     {
-        auto first = mappedFile.const_data();
-        auto last = first + mappedFile.size();
+        mappedFile.open(path, boost::iostreams::mapped_file::readonly);
+    }
+    catch(std::exception const& e)
+    {
+        result = OBJParser::Result::FailedMTLFileRead;
+        m_LastError = "Failed to open file '" + path + "' with error: " + e.what();
+    }
 
-        MTLGrammar grammar(&m_OBJState);
-        MTLGrammarSkipper skipper;
-
-        if(qi::phrase_parse(first, last, grammar, skipper))
+    if(result == OBJParser::Result::Success)
+    {
+        if(mappedFile.is_open())
         {
-            if(first == last)
+            auto first = mappedFile.const_data();
+            auto last = first + mappedFile.size();
+
+            MTLGrammar grammar(&m_OBJState);
+            MTLGrammarSkipper skipper;
+
+            if(qi::phrase_parse(first, last, grammar, skipper))
             {
-                grammar.finishCurrentMaterial();
+                if(first == last)
+                {
+                    grammar.finishCurrentMaterial();
+                }
+                else
+                {
+                    result = OBJParser::Result::FailedOBJParseError;
+                    m_LastError = "Failed to parse line '" + extractLastLine(first) + "' in file '" + path + "'";
+                }
             }
             else
             {
                 result = OBJParser::Result::FailedOBJParseError;
                 m_LastError = "Failed to parse line '" + extractLastLine(first) + "' in file '" + path + "'";
             }
+
+            mappedFile.close();
         }
         else
         {
-            result = OBJParser::Result::FailedOBJParseError;
-            m_LastError = "Failed to parse line '" + extractLastLine(first) + "' in file '" + path + "'";
+            result = OBJParser::Result::FailedMTLFileRead;
+            m_LastError = "Failed to open file '" + path + "'";
         }
-
-        mappedFile.close();
-    }
-    else
-    {
-        result = OBJParser::Result::FailedMTLFileRead;
-        m_LastError = "Failed to open file '" + path + "'";
     }
 
 #endif

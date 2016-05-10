@@ -121,6 +121,8 @@ public:
      */
     std::vector<std::string> const* getMaterialLibraries() const;
 
+    void getMaterials(std::vector<OBJMaterial const*>& materials) const;
+
     //--------------------------------------------------------------------
     // OBJ Parser/Grammar Methods
     //--------------------------------------------------------------------

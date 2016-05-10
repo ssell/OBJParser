@@ -22,14 +22,61 @@
 
 //------------------------------------------------------------------------------------------
 
-int main(int argc, char** argv)
+void OutputState(OBJState* state)
 {
-    OBJParser parser;
-    OBJState* state = parser.getOBJState();
+    std::cout << "++++++++++++++++++++++++++++++++++++" << std::endl;
+    
+    //--------------------------------------------------------------------
+    // Print out vertex counts
+    //--------------------------------------------------------------------
 
-    const std::string path = "test/hairball.obj";
+    std::cout << "- Vertex Data" << "\n"
+              << "    Spatial Count: " << state->getSpatialData()->size() << "\n"
+              << "    Texture Count: " << state->getTextureData()->size() << "\n"
+              << "    Normals Count: " << state->getNormalData()->size()  << "\n"
+              << "     Params Count: " << state->getFreeFormState()->vertexParameterData.size() << std::endl;
+    
+    //--------------------------------------------------------------------
+    // Print out basic group information
+    //--------------------------------------------------------------------
+
+    std::vector<OBJGroup const*> groups;
+    state->getGroups(groups);
+
+    std::cout << "- Group Data [" << groups.size() << "]" << std::endl;
+
+    for(auto group : groups)
+    {
+        std::cout << "    Group:" << "\n"
+                  << "             Name: " << group->name << "\n"
+                  << "         # Points: " << group->points.size() << "\n"
+                  << "          # Lines: " << group->lines.size() << "\n"
+                  << "          # Faces: " << group->faces.size() << std::endl;
+    }
+    
+    //--------------------------------------------------------------------
+    // Print out basic material information
+    //--------------------------------------------------------------------
+
+    std::vector<OBJMaterial const*> materials;
+    state->getMaterials(materials);
+
+    std::cout << "- Material Data [" << materials.size() << "]" << std::endl;
+
+    for(auto material : materials)
+    {
+        std::cout << "    Material:" << "\n"
+                  << "             Name: " << material->getName() << std::endl;
+    }
 
     //--------------------------------------------------------------------
+
+    std::cout << "++++++++++++++++++++++++++++++++++++" << std::endl;
+}
+
+void ParsePath(std::string const& path, OBJParser& parser)
+{
+    OBJState* state = parser.getOBJState();
 
     const auto start = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     const auto result = parser.parseOBJFile(path);
@@ -37,22 +84,45 @@ int main(int argc, char** argv)
 
     if(result != OBJParser::Result::Success)
     {
-        std::cout << parser.getLastError() << std::endl;
+        std::cout << "... Failed!\n\nError: " <<  parser.getLastError() << std::endl;
     }
     else
     {
         const auto elapsed = end - start;
         const double elapsedd = static_cast<double>(end - start) / static_cast<double>(1e9);
 
-        std::cout << "Finished parsing '" << path << "' in " << elapsedd << " seconds" << std::endl;
+        std::cout << "... Complete! [elapsed " << elapsedd << " s]\n" << std::endl;
 
-        std::cout << "# S: " << state->getSpatialData()->size() << "\n"
-                  << "# T: " << state->getTextureData()->size() << "\n"
-                  << "# N: " << state->getNormalData()->size() << std::endl;
+        OutputState(state);
     }
+}
 
-    int hold = 0;
-    std::cin >> hold;
+void Loop()
+{
+    OBJParser parser;
+
+    std::cout << "------------------------------------------------------\n"
+                 "- OBJParser Sample Application\n"
+                 "------------------------------------------------------" << std::endl;
+
+    while(true)
+    {
+        std::string path;
+
+        std::cout << "\nPlease enter relative path to OBJ file to parse:\n\n> ";
+        std::getline(std::cin, path);
+
+        std::cout << "\nParsing ...\n";
+
+        ParsePath(path, parser);
+    }
+}
+
+//------------------------------------------------------------------------------------------
+
+int main(int argc, char** argv)
+{
+    Loop();
 
     return 0;
 }

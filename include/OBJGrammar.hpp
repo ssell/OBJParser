@@ -38,7 +38,7 @@ class OBJGrammar : public qi::grammar<OBJIterator, OBJSkipper>
 {
 public:
 
-    OBJGrammar(OBJState* state, bool useFreeForms);
+    OBJGrammar(OBJState* state);
 
 private:
 

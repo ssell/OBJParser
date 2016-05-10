@@ -68,7 +68,8 @@ OBJMaterialDissolve::OBJMaterialDissolve()
 OBJMaterial::OBJMaterial()
     : m_Name(""),
       m_IlluminationModel(1),
-      m_SpecularExponent(1),
+      m_Transparency(0.0f),
+      m_SpecularExponent(1.0f),
       m_Sharpness(60),
       m_OpticalDensity(1.0f),
       m_TextureAntiAliasing(false),
@@ -269,6 +270,20 @@ void OBJMaterial::setDissolve(OBJMaterialDissolve const& dissolve)
 OBJMaterialDissolve const& OBJMaterial::getDissolve() const
 {
     return m_Dissolve;
+}
+
+//------------------------------------------------------------------------
+// Transparency
+//------------------------------------------------------------------------
+
+void OBJMaterial::setTransparency(float transparency)
+{
+    m_Transparency = transparency;
+}
+
+float OBJMaterial::getTransparency() const
+{
+    return m_Transparency;
 }
 
 //------------------------------------------------------------------------

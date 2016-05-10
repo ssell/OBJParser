@@ -32,10 +32,10 @@ MTLGrammar::MTLGrammar(OBJState* state)
     setupReflectionMapRules();
 
     ruleStart = +(ruleNewMaterial |
-                    ruleColorIllumination |
-                    ruleTextureMap |
-                    ruleReflectionMap |
-                    qi::eol);
+                  ruleColorIllumination |
+                  ruleTextureMap |
+                  ruleReflectionMap |
+                  qi::eol);
 }
 
 //------------------------------------------------------------------------------------------
@@ -224,6 +224,14 @@ void MTLGrammar::setupColorIlluminationRules()
         ruleDissolveData [boost::phoenix::bind(&OBJMaterial::setDissolve, &m_CurrentMaterial, qi::_1)];
 
     //----------------------------------------------------------------
+    // Transparency 
+    //----------------------------------------------------------------
+
+    ruleTransparency =
+        qi::lit("Tr") >>
+        qi::float_ [boost::phoenix::bind(&OBJMaterial::setTransparency, &m_CurrentMaterial, qi::_1)];
+
+    //----------------------------------------------------------------
     // Illumination
     //----------------------------------------------------------------
 
@@ -257,6 +265,7 @@ void MTLGrammar::setupColorIlluminationRules()
             ruleTransmission | 
             ruleIllumination |
             ruleDissolve |
+            ruleTransparency |
             ruleSpecularExponent |
             ruleSharpness |
             ruleOpticalDensity) >>
@@ -309,7 +318,8 @@ void MTLGrammar::setupTextureMapRules()
         ruleTextureMapBody [boost::phoenix::bind(&OBJMaterial::setDisplacementTexture, &m_CurrentMaterial, &m_CurrentTexture)];
 
     ruleTextureMapBump =
-        qi::lit("bump") [boost::phoenix::bind(&MTLGrammar::resetCurrentTexture, this)] >>
+        (qi::lit("bump") [boost::phoenix::bind(&MTLGrammar::resetCurrentTexture, this)] |
+         qi::lit("map_bump") [boost::phoenix::bind(&MTLGrammar::resetCurrentTexture, this)]) >>
         ruleTextureMapBody [boost::phoenix::bind(&OBJMaterial::setBumpTexture, &m_CurrentMaterial, &m_CurrentTexture)];
 
     //----------------------------------------------------------------
