@@ -88,7 +88,7 @@
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v120</PlatformToolset>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <WholeProgramOptimization>false</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -286,6 +286,7 @@
       <AdditionalIncludeDirectories>$(BOOST_DIR);$(ProjectDir)..\..\include</AdditionalIncludeDirectories>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <PreprocessorDefinitions>OBJ_PARSER_USE_MEM_MAP;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DebugInformationFormat>None</DebugInformationFormat>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -296,7 +297,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\MTLGrammar.cpp" />
+    <ClCompile Include="..\..\src\MTLGrammarSkipper.cpp" />
     <ClCompile Include="..\..\src\OBJFreeFormState.cpp" />
+    <ClCompile Include="..\..\src\OBJGrammar.cpp" />
+    <ClCompile Include="..\..\src\OBJGrammarSkipper.cpp" />
     <ClCompile Include="..\..\src\OBJMaterial.cpp" />
     <ClCompile Include="..\..\src\OBJParser.cpp" />
     <ClCompile Include="..\..\src\OBJState.cpp" />
@@ -307,6 +312,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\include\MTLGrammar.hpp" />
     <ClInclude Include="..\..\include\MTLGrammarSkipper.hpp" />
+    <ClInclude Include="..\..\include\OBJCommon.hpp" />
     <ClInclude Include="..\..\include\OBJFreeFormAttributeState.hpp" />
     <ClInclude Include="..\..\include\OBJFreeFormState.hpp" />
     <ClInclude Include="..\..\include\OBJRenderState.hpp" />

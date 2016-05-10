@@ -14,31 +14,24 @@
  * limitations under the License.
  */
 
-#ifndef __H__OBJ_PARSER_GRAMMAR_SKIPPER__H__
-#define __H__OBJ_PARSER_GRAMMAR_SKIPPER__H__
-
-#include "OBJCommon.hpp"
+#ifndef __H__OBJ_COMMON__H__
+#define __H__OBJ_COMMON__H__
 
 //------------------------------------------------------------------------------------------
 
-/**
- * \class OBJGrammarSkipper
- * 
- * Grammar defining how to skip OBJ comments.
- * A comment is started with the '#' character and continues until the end of the line.
- */
-class OBJGrammarSkipper : public boost::spirit::qi::grammar<OBJIterator>
-{
-public:
+#define BOOST_SPIRIT_USE_PHOENIX_V3
 
-    OBJGrammarSkipper();
+#pragma warning (disable:4348)
+#include <boost/spirit/include/qi.hpp>
+#include <boost/spirit/include/phoenix.hpp>
 
-protected:
-
-private:
-
-    boost::spirit::qi::rule<OBJIterator> ruleSkip;
-};
+#ifdef OBJ_PARSER_USE_MEM_MAP
+using OBJIterator = const char*;
+#else
+using OBJIterator = boost::spirit::istream_iterator;
+#endif
+    
+using namespace boost::spirit;
 
 //------------------------------------------------------------------------------------------
 

@@ -1,18 +1,18 @@
 /**
-* Copyright 2016 Steven T Sell (ssell@ocularinteractive.com)
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*    http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2016 Steven T Sell (ssell@ocularinteractive.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include "OBJParser.hpp"
 #include "OBJGrammar.hpp"
@@ -47,18 +47,6 @@ OBJParser::~OBJParser()
 OBJParser::Result OBJParser::parseOBJString(std::string const& str)
 {
     OBJParser::Result result = OBJParser::Result::Success;
-
-    using Iterator = decltype(str.begin());
-    
-    m_OBJState.clearState();
-
-    OBJGrammar<Iterator> grammar(&m_OBJState, m_ParseFreeForm);
-    OBJCommentSkipper<Iterator> skipper;
-
-    if(!qi::phrase_parse(str.begin(), str.end(), grammar, skipper))
-    {
-        result = OBJParser::Result::FailedOBJParseError;
-    }
 
     return result;
 }
@@ -183,7 +171,7 @@ OBJParser::Result OBJParser::parseMTLFilefstream(std::string const& path)
         Iterator last;
 
         MTLGrammar<Iterator> grammar(&m_OBJState);
-        MTLCommentSkipper<Iterator> skipper;
+        MTLGrammarSkipper<Iterator> skipper;
 
         if(qi::phrase_parse(first, last, grammar, skipper))
         {
@@ -234,8 +222,8 @@ OBJParser::Result OBJParser::parseOBJFileMemMap(std::string const& path)
         auto last = first + mappedFile.size();
 
         using Iterator = decltype(first);
-        OBJGrammar<Iterator> grammar(&m_OBJState, m_ParseFreeForm);
-        OBJCommentSkipper<Iterator> skipper;
+        OBJGrammar grammar(&m_OBJState, m_ParseFreeForm);
+        OBJGrammarSkipper skipper;
 
         if(qi::phrase_parse(first, last, grammar, skipper))
         {
@@ -295,9 +283,8 @@ OBJParser::Result OBJParser::parseMTLFileMemMap(std::string const& path)
         auto first = mappedFile.const_data();
         auto last = first + mappedFile.size();
 
-        using Iterator = decltype(first);
-        MTLGrammar<Iterator> grammar(&m_OBJState);
-        MTLCommentSkipper<Iterator> skipper;
+        MTLGrammar grammar(&m_OBJState);
+        MTLGrammarSkipper skipper;
 
         if(qi::phrase_parse(first, last, grammar, skipper))
         {

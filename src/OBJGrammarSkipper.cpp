@@ -14,32 +14,26 @@
  * limitations under the License.
  */
 
-#ifndef __H__OBJ_PARSER_GRAMMAR_SKIPPER__H__
-#define __H__OBJ_PARSER_GRAMMAR_SKIPPER__H__
-
-#include "OBJCommon.hpp"
+#include "OBJGrammarSkipper.hpp"
 
 //------------------------------------------------------------------------------------------
+// Constructors
+//------------------------------------------------------------------------------------------
 
-/**
- * \class OBJGrammarSkipper
- * 
- * Grammar defining how to skip OBJ comments.
- * A comment is started with the '#' character and continues until the end of the line.
- */
-class OBJGrammarSkipper : public boost::spirit::qi::grammar<OBJIterator>
+OBJGrammarSkipper::OBJGrammarSkipper()
+    : OBJGrammarSkipper::base_type(ruleSkip)
 {
-public:
-
-    OBJGrammarSkipper();
-
-protected:
-
-private:
-
-    boost::spirit::qi::rule<OBJIterator> ruleSkip;
-};
+    ruleSkip = (qi::char_('#') >> *(qi::char_ - qi::eol) >> qi::eol);
+}
 
 //------------------------------------------------------------------------------------------
+// Public Methods
+//------------------------------------------------------------------------------------------
 
-#endif
+//------------------------------------------------------------------------------------------
+// Protected Methods
+//------------------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------------------
+// Private Methods
+//------------------------------------------------------------------------------------------

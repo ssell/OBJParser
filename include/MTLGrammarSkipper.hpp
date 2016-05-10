@@ -17,36 +17,27 @@
 #ifndef __H__OBJ_PARSER_MTL_GRAMMAR_SKIPPER__H__
 #define __H__OBJ_PARSER_MTL_GRAMMAR_SKIPPER__H__
 
-#pragma warning (disable:4348)
-
-#include <boost/spirit/include/qi.hpp>
-
-using namespace boost::spirit;
+#include "OBJCommon.hpp"
 
 //------------------------------------------------------------------------------------------
 
 /**
- * \class MTLCommentSkipper
+ * \class MTLGrammarSkipper
  * 
  * Grammar defining how to skip MTL comments and whitespace.
  * A comment is started with the '#' character and continues until the end of the line.
  */
-template<typename Iterator>
-class MTLCommentSkipper : public boost::spirit::qi::grammar<Iterator>
+class MTLGrammarSkipper : public boost::spirit::qi::grammar<OBJIterator>
 {
 public:
 
-    MTLCommentSkipper()
-        : MTLCommentSkipper::base_type(ruleSkip)
-    {
-        ruleSkip = qi::blank | (qi::char_('#') >> *(qi::char_ - qi::eol) >> qi::eol);
-    }
-
-    boost::spirit::qi::rule<Iterator> ruleSkip;
+    MTLGrammarSkipper();
 
 protected:
 
 private:
+
+    boost::spirit::qi::rule<OBJIterator> ruleSkip;
 };
 
 //------------------------------------------------------------------------------------------
