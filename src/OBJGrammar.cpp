@@ -32,8 +32,6 @@ OBJGrammar::OBJGrammar(OBJState* state, bool useFreeForms)
     setupMaterialRules();
     setupRenderStateRules();
 
-    ruleEmptyLine = *(qi::blank) >> qi::eol;
-
     if(useFreeForms)
     {
         setupFreeFormRules();
@@ -42,8 +40,7 @@ OBJGrammar::OBJGrammar(OBJState* state, bool useFreeForms)
                       ruleFaces       | 
                       ruleFreeForms   |
                       ruleMaterials   |
-                      ruleRenderState |
-                      ruleEmptyLine);
+                      ruleRenderState);
     }
     else
     {
@@ -51,8 +48,7 @@ OBJGrammar::OBJGrammar(OBJState* state, bool useFreeForms)
                       ruleVertices    |
                       ruleFaces       | 
                       ruleMaterials   |
-                      ruleRenderState |
-                      ruleEmptyLine);
+                      ruleRenderState);
     }
 }
 
@@ -71,15 +67,15 @@ OBJGrammar::OBJGrammar(OBJState* state, bool useFreeForms)
 void OBJGrammar::setupDataRules()
 {
     // At the end of the vector rules we consume any unexcepted characters to account for certain obj writers
-    ruleVector2Data = qi::skip(qi::blank)[qi::float_ >> qi::float_ >> *(qi::char_ - qi::eol)];
-    ruleVector3Data = qi::skip(qi::blank)[qi::float_ >> qi::float_ >> qi::float_ >> *(qi::char_ - qi::eol)];
-    ruleVector4Data = qi::skip(qi::blank)[qi::float_ >> qi::float_ >> qi::float_ >> -(qi::float_) >> *(qi::char_ - qi::eol)];
+    ruleVector2Data = qi::float_ >> qi::float_ >> *(qi::char_ - qi::eol);
+    ruleVector3Data = qi::float_ >> qi::float_ >> qi::float_ >> *(qi::char_ - qi::eol);
+    ruleVector4Data = qi::float_ >> qi::float_ >> qi::float_ >> -(qi::float_) >> *(qi::char_ - qi::eol);
 
     ruleIndexValue = qi::int_ | qi::attr(0);
     ruleVertexGroupData = ruleIndexValue >> -qi::omit[qi::char_('/')] >> ruleIndexValue >> -qi::omit[qi::char_('/')] >> ruleIndexValue;
-    ruleIndexList = +(qi::omit[qi::blank] >> ruleVertexGroupData);
+    ruleIndexList = +(ruleVertexGroupData);
 
-    ruleName = +(qi::char_ - qi::space);
+    ruleName = qi::lexeme[+(qi::graph)];
 }
 
 void OBJGrammar::setupGroupRules()
@@ -89,8 +85,8 @@ void OBJGrammar::setupGroupRules()
 
     ruleGroupName = *(qi::char_ - ascii::space);
     ruleGroup = 
-        qi::lit("g ") [boost::phoenix::bind(&OBJState::clearActiveGroups, m_pOBJState)] >> 
-        (ruleGroupName [boost::phoenix::bind(&OBJState::addActiveGroup, m_pOBJState, qi::_1)] % +(ascii::blank)) >> 
+        qi::lit("g") [boost::phoenix::bind(&OBJState::clearActiveGroups, m_pOBJState)] >> 
+        +(ruleName [boost::phoenix::bind(&OBJState::addActiveGroup, m_pOBJState, qi::_1)]) >> 
         qi::eol;
 }
 
@@ -102,22 +98,22 @@ void OBJGrammar::setupVertexRules()
     //  vn 0.0 0.0 0.0
 
     ruleVertexSpatial = 
-        qi::lit("v ") >> 
+        qi::lit("v") >> 
         ruleVector4Data [boost::phoenix::bind(&OBJState::addVertexSpatial, m_pOBJState, qi::_1)] >> 
         qi::eol;
 
     ruleVertexTexture =
-        qi::lit("vt ") >>
+        qi::lit("vt") >>
         ruleVector2Data [boost::phoenix::bind(&OBJState::addVertexTexture, m_pOBJState, qi::_1)] >>
         qi::eol;
 
     ruleVertexNormal =
-        qi::lit("vn ") >>
+        qi::lit("vn") >>
         ruleVector3Data [boost::phoenix::bind(&OBJState::addVertexNormal, m_pOBJState, qi::_1)] >>
         qi::eol;
 
     ruleVertexParameter =
-        qi::lit("vp ") >>
+        qi::lit("vp") >>
         ruleVector3Data [boost::phoenix::bind(&OBJState::addVertexParameter, m_pOBJState, qi::_1)] >>
         qi::eol;
         
@@ -135,17 +131,13 @@ void OBJGrammar::setupFaceRules()
 
     ruleFaceData = 
         ruleVertexGroupData >> 
-        qi::omit[qi::blank] >> 
         ruleVertexGroupData >> 
-        qi::omit[qi::blank] >> 
         ruleVertexGroupData >> 
-        -qi::omit[qi::blank] >> 
         -(ruleVertexGroupData);
 
     ruleFace =
-        qi::lit("f ") >>
+        qi::lit("f") >>
         ruleFaceData [boost::phoenix::bind(&OBJState::addFace, m_pOBJState, qi::_1)] >>
-        *(qi::char_ - qi::eol) >>
         qi::eol;
         
     //----------------------------------------------------------------
@@ -158,7 +150,6 @@ void OBJGrammar::setupFaceRules()
     ruleLine =
         qi::lit("l") >>
         ruleIndexList [boost::phoenix::bind(&OBJState::addLine, m_pOBJState, qi::_1)] >>
-        *(qi::char_ - qi::eol) >>
         qi::eol;
         
     //----------------------------------------------------------------
@@ -171,7 +162,6 @@ void OBJGrammar::setupFaceRules()
     rulePoint =
         qi::lit("p") >>
         ruleIndexList [boost::phoenix::bind(&OBJState::addPointCollection, m_pOBJState, qi::_1)] >>
-        *(qi::char_ - qi::eol) >>
         qi::eol;
         
     ruleFaces = ruleFace | ruleLine | rulePoint;
@@ -201,15 +191,12 @@ void OBJGrammar::setupFreeFormStart()
 
     ruleFreeFormCurveData =
         qi::float_ >>
-        qi::omit[qi::blank] >> 
         qi::float_ >>
-        qi::omit[qi::blank] >> 
         ruleIndexList;
 
     ruleFreeFormCurve =
-        qi::lit("curv ") >>
+        qi::lit("curv") >>
         ruleFreeFormCurveData [boost::phoenix::bind(&OBJState::addFreeFormCurve, m_pOBJState, qi::_1)] >>
-        *(qi::blank) >>
         qi::eol;
 
     //----------------------------------------------------------------
@@ -217,12 +204,11 @@ void OBJGrammar::setupFreeFormStart()
     //----------------------------------------------------------------
 
     ruleFreeFormCurve2DData =
-        +(qi::omit[qi::blank] >> qi::int_);;
+        +(qi::int_);
 
     ruleFreeFormCurve2D =
         qi::lit("curv2") >>
         ruleFreeFormCurve2DData [boost::phoenix::bind(&OBJState::addFreeFormCurve2D, m_pOBJState, qi::_1)] >>
-        *(qi::blank) >>
         qi::eol;
 
     //----------------------------------------------------------------
@@ -231,19 +217,14 @@ void OBJGrammar::setupFreeFormStart()
 
     ruleFreeFormSurfaceData =
         qi::float_ >>
-        qi::omit[qi::blank] >>
         qi::float_ >>
-        qi::omit[qi::blank] >>
         qi::float_ >>
-        qi::omit[qi::blank] >>
         qi::float_ >>
-        qi::omit[qi::blank] >>
         ruleVertexGroupData;
 
     ruleFreeFormSurface =
         qi::lit("surf") >>
         ruleFreeFormSurfaceData [boost::phoenix::bind(&OBJState::addFreeFormSurface, m_pOBJState, qi::_1)] >>
-        *(qi::blank) >>
         qi::eol;
             
     //----------------------------------------------------------------
@@ -261,22 +242,20 @@ void OBJGrammar::setupFreeFormBody()
     //----------------------------------------------------------------
 
     qi::rule<OBJIterator, std::vector<float>(), OBJSkipper> ruleParameterData =
-        +(qi::omit[qi::blank] >> qi::float_);
+        +(qi::float_);
 
     qi::rule<OBJIterator, OBJSkipper> ruleParameterU =
         qi::lit("u") >>
         ruleParameterData [boost::phoenix::bind(&OBJState::addFreeFormParameterU, m_pOBJState, qi::_1)] >>
-        *(qi::blank) >>
         qi::eol;
 
     qi::rule<OBJIterator, OBJSkipper> ruleParameterV =
         qi::lit("v") >>
         ruleParameterData [boost::phoenix::bind(&OBJState::addFreeFormParameterU, m_pOBJState, qi::_1)] >>
-        *(qi::blank) >>
         qi::eol;
 
     ruleFreeFormParameter =
-        qi::lit("parm ") >>
+        qi::lit("parm") >>
         (ruleParameterU | ruleParameterV);
         
     //----------------------------------------------------------------
@@ -284,17 +263,13 @@ void OBJGrammar::setupFreeFormBody()
     //----------------------------------------------------------------
 
     qi::rule<OBJIterator, OBJSimpleCurve(), OBJSkipper> ruleSimpleCurve =
-        qi::omit[qi::blank] >>
         qi::float_ >>
-        qi::omit[qi::blank] >>
         qi::float_ >>
-        qi::omit[qi::blank] >>
         qi::int_;
 
     ruleFreeFormTrim =
         qi::lit("trim") >>
         +(ruleSimpleCurve [boost::phoenix::bind(&OBJState::addFreeFormTrim, m_pOBJState, qi::_1)]) >>
-        *(qi::blank) >>
         qi::eol;
         
     //----------------------------------------------------------------
@@ -304,7 +279,6 @@ void OBJGrammar::setupFreeFormBody()
     ruleFreeFormHole =
         qi::lit("hole") >>
         +(ruleSimpleCurve [boost::phoenix::bind(&OBJState::addFreeFormHole, m_pOBJState, qi::_1)]) >>
-        *(qi::blank) >>
         qi::eol;
         
     //----------------------------------------------------------------
@@ -314,7 +288,6 @@ void OBJGrammar::setupFreeFormBody()
     ruleFreeFormTrim =
         qi::lit("scrv") >>
         +(ruleSimpleCurve [boost::phoenix::bind(&OBJState::addFreeFormSpecialCurve, m_pOBJState, qi::_1)]) >>
-        *(qi::blank) >>
         qi::eol;
         
     //----------------------------------------------------------------
@@ -322,12 +295,11 @@ void OBJGrammar::setupFreeFormBody()
     //----------------------------------------------------------------
         
     qi::rule<OBJIterator, std::vector<int32_t>(), OBJSkipper> ruleSpecialPointsData =
-        +(qi::omit[qi::blank] >> qi::int_);
+        +(qi::int_);
 
     ruleFreeFormSpecialPoint = 
         qi::lit("sp") >>
         ruleSpecialPointsData [boost::phoenix::bind(&OBJState::addFreeFormSpecialPoints, m_pOBJState, qi::_1)] >>
-        *(qi::blank) >>
         qi::eol;
 
     //----------------------------------------------------------------
@@ -344,7 +316,6 @@ void OBJGrammar::setupFreeFormEnd()
 {
     ruleFreeFormEnd =
         qi::lit("end") >>
-        *(qi::blank) >>
         qi::eol;
 }
 
@@ -355,21 +326,20 @@ void OBJGrammar::setupFreeFormAttributes()
     //----------------------------------------------------------------
 
     qi::rule<OBJIterator, bool(), OBJSkipper> ruleFreeFormRational =
-        (qi::omit[qi::lit(" rat")] [qi::_val = true] |
+        (qi::omit[qi::lit("rat")] [qi::_val = true] |
         (qi::attr(false)));
 
     qi::rule<OBJIterator, OBJSkipper> ruleTypes =
-        (qi::lit(" bmatrix")  [boost::phoenix::bind(&OBJState::setFreeFormType, m_pOBJState, OBJFreeFormType::BasisMatrix)] |
-            qi::lit(" bezier")   [boost::phoenix::bind(&OBJState::setFreeFormType, m_pOBJState, OBJFreeFormType::Bezier)]      |
-            qi::lit(" bspline")  [boost::phoenix::bind(&OBJState::setFreeFormType, m_pOBJState, OBJFreeFormType::BSpline)]     |
-            qi::lit(" cardinal") [boost::phoenix::bind(&OBJState::setFreeFormType, m_pOBJState, OBJFreeFormType::Cardinal)]    |
-            qi::lit(" taylor")   [boost::phoenix::bind(&OBJState::setFreeFormType, m_pOBJState, OBJFreeFormType::Taylor)]);
+        (qi::lit("bmatrix")  [boost::phoenix::bind(&OBJState::setFreeFormType, m_pOBJState, OBJFreeFormType::BasisMatrix)] |
+         qi::lit("bezier")   [boost::phoenix::bind(&OBJState::setFreeFormType, m_pOBJState, OBJFreeFormType::Bezier)]      |
+         qi::lit("bspline")  [boost::phoenix::bind(&OBJState::setFreeFormType, m_pOBJState, OBJFreeFormType::BSpline)]     |
+         qi::lit("cardinal") [boost::phoenix::bind(&OBJState::setFreeFormType, m_pOBJState, OBJFreeFormType::Cardinal)]    |
+         qi::lit("taylor")   [boost::phoenix::bind(&OBJState::setFreeFormType, m_pOBJState, OBJFreeFormType::Taylor)]);
 
     ruleFreeFormType =
         qi::lit("cstype") >>
         ruleFreeFormRational [boost::phoenix::bind(&OBJState::setFreeFormRational, m_pOBJState, qi::_1)] >>
         ruleTypes >>
-        *(qi::blank) >>
         qi::eol;
 
     //----------------------------------------------------------------
@@ -377,23 +347,19 @@ void OBJGrammar::setupFreeFormAttributes()
     //----------------------------------------------------------------
 
     ruleFreeFormDegree = 
-        qi::lit("deg ") >>
+        qi::lit("deg") >>
         qi::int_ [boost::phoenix::bind(&OBJState::setFreeFormDegreeU, m_pOBJState, qi::_1)] >>
-        -(qi::omit[qi::blank] >> 
-            qi::int_ [boost::phoenix::bind(&OBJState::setFreeFormDegreeV, m_pOBJState, qi::_1)]) >>
-        *(qi::blank) >>
+        -(qi::int_ [boost::phoenix::bind(&OBJState::setFreeFormDegreeV, m_pOBJState, qi::_1)]) >>
         qi::eol;
 
     //----------------------------------------------------------------
     // Step
     //----------------------------------------------------------------
 
-    ruleFreeFormDegree = 
-        qi::lit("step ") >>
+    ruleFreeFormStep = 
+        qi::lit("step") >>
         qi::int_ [boost::phoenix::bind(&OBJState::setFreeFormStepU, m_pOBJState, qi::_1)] >>
-        -(qi::omit[qi::blank] >> 
-            qi::int_ [boost::phoenix::bind(&OBJState::setFreeFormStepV, m_pOBJState, qi::_1)]) >>
-        *(qi::blank) >>
+        -(qi::int_ [boost::phoenix::bind(&OBJState::setFreeFormStepV, m_pOBJState, qi::_1)]) >>
         qi::eol;
 
     //----------------------------------------------------------------
@@ -401,70 +367,58 @@ void OBJGrammar::setupFreeFormAttributes()
     //----------------------------------------------------------------
 
     qi::rule<OBJIterator, std::vector<float>(), OBJSkipper> ruleMatrixData =
-        +(qi::skip[qi::blank] >> qi::float_);
+        +(qi::float_);
 
     qi::rule<OBJIterator, OBJSkipper> ruleBasisU =
-        qi::lit(" u") >>
+        qi::lit("u") >>
         ruleMatrixData [boost::phoenix::bind(&OBJState::setFreeFormBasisMatrixU, m_pOBJState, qi::_1)] >>
-        *(qi::blank) >>
         qi::eol;
 
     qi::rule<OBJIterator, OBJSkipper> ruleBasisV =
-        qi::lit(" v") >>
+        qi::lit("v") >>
         ruleMatrixData [boost::phoenix::bind(&OBJState::setFreeFormBasisMatrixV, m_pOBJState, qi::_1)] >>
-        *(qi::blank) >>
         qi::eol;
         
     ruleFreeFormBasisMatrix = 
         qi::lit("bmat") >>
         (ruleBasisU | 
-            ruleBasisV);
+         ruleBasisV);
 
     //----------------------------------------------------------------
     // Merge Group
     //----------------------------------------------------------------
 
     ruleFreeFormMergeGroup =
-        qi::lit("mg ") >>
+        qi::lit("mg") >>
         qi::int_ [boost::phoenix::bind(&OBJState::setFreeFormMergeGroupNumber, m_pOBJState, qi::_1)] >>
-        qi::omit[qi::blank] >>
         qi::float_ [boost::phoenix::bind(&OBJState::setFreeFormMergeGroupResolution, m_pOBJState, qi::_1)] >> 
-        *(qi::blank) >>
         qi::eol;
 
     //----------------------------------------------------------------
 
     ruleFreeFormAttributes = 
         (ruleFreeFormType |
-            ruleFreeFormDegree |
-            ruleFreeFormStep |
-            ruleFreeFormBasisMatrix |
-            ruleFreeFormMergeGroup);
+         ruleFreeFormDegree |
+         ruleFreeFormStep |
+         ruleFreeFormBasisMatrix |
+         ruleFreeFormMergeGroup);
 }
 
 void OBJGrammar::setupFreeFormConnections()
 {
     qi::rule<OBJIterator, OBJSurfaceConnection(), OBJSkipper> ruleConnectionData =
         qi::int_ >>                // surface1
-        qi::omit[qi::blank] >>
         qi::float_ >>              // startParam1
-        qi::omit[qi::blank] >>
         qi::float_ >>              // endParam1
-        qi::omit[qi::blank] >>
         qi::int_ >>                // curve2D1
-        qi::omit[qi::blank] >>
         qi::int_ >>                // surface2
-        qi::omit[qi::blank] >>
         qi::float_ >>              // startParam2
-        qi::omit[qi::blank] >>
         qi::float_ >>              // endParam2
-        qi::omit[qi::blank] >>
         qi::int_;                  // curve2D2
 
     ruleFreeFormConnection = 
-        qi::lit("con ") >>
+        qi::lit("con") >>
         ruleConnectionData [boost::phoenix::bind(&OBJState::addFreeFormConnection, m_pOBJState, qi::_1)] >>
-        *(qi::blank) >>
         qi::eol;
 }
 
@@ -475,13 +429,12 @@ void OBJGrammar::setupMaterialRules()
     // usemtl test
 
     ruleMaterialLibrary = 
-        qi::lit("mtllib ") >> 
-        +(ruleName [boost::phoenix::bind(&OBJState::addMaterialLibrary, m_pOBJState, qi::_1)] >> 
-        -(qi::omit[qi::blank]))  >> 
+        qi::lit("mtllib") >> 
+        +(ruleName [boost::phoenix::bind(&OBJState::addMaterialLibrary, m_pOBJState, qi::_1)]) >> 
         qi::eol;
 
     ruleMaterialUse = 
-        qi::lit("usemtl ") >> 
+        qi::lit("usemtl") >> 
         ruleName [boost::phoenix::bind(&OBJState::setMaterial, m_pOBJState, qi::_1)] >> 
         qi::eol;
 
@@ -495,21 +448,21 @@ void OBJGrammar::setupRenderStateRules()
     //----------------------------------------------------------------
 
     ruleBevelInterp = 
-        qi::lit("bevel ") >> 
+        qi::lit("bevel") >> 
         (qi::lit("on") [boost::phoenix::bind(&OBJState::setBevelInterp, m_pOBJState, true)] | 
-            qi::lit("off") [boost::phoenix::bind(&OBJState::setBevelInterp, m_pOBJState, false)]) >> 
+         qi::lit("off") [boost::phoenix::bind(&OBJState::setBevelInterp, m_pOBJState, false)]) >> 
         qi::eol;
         
     ruleColorInterp = 
-        qi::lit("c_interp ") >> 
+        qi::lit("c_interp") >> 
         (qi::lit("on") [boost::phoenix::bind(&OBJState::setColorInterp, m_pOBJState, true)] | 
-            qi::lit("off") [boost::phoenix::bind(&OBJState::setColorInterp, m_pOBJState, false)]) >> 
+         qi::lit("off") [boost::phoenix::bind(&OBJState::setColorInterp, m_pOBJState, false)]) >> 
         qi::eol;
         
     ruleDissolveInterp = 
-        qi::lit("d_interp ") >> 
+        qi::lit("d_interp") >> 
         (qi::lit("on") [boost::phoenix::bind(&OBJState::setDissolveInterp, m_pOBJState, true)] | 
-            qi::lit("off") [boost::phoenix::bind(&OBJState::setDissolveInterp, m_pOBJState, false)]) >> 
+         qi::lit("off") [boost::phoenix::bind(&OBJState::setDissolveInterp, m_pOBJState, false)]) >> 
         qi::eol;
         
     //----------------------------------------------------------------
@@ -517,35 +470,34 @@ void OBJGrammar::setupRenderStateRules()
     //----------------------------------------------------------------
 
     ruleSmoothing = 
-        qi::lit("s ") >> 
+        qi::lit("s") >> 
         (qi::lit("off") [boost::phoenix::bind(&OBJState::setSmoothingGroup, m_pOBJState, 0)] |
-            qi::uint_ [boost::phoenix::bind(&OBJState::setSmoothingGroup, m_pOBJState, qi::_1)]) >> 
+         qi::uint_ [boost::phoenix::bind(&OBJState::setSmoothingGroup, m_pOBJState, qi::_1)]) >> 
         qi::eol;
 
     ruleLOD = 
-        qi::lit("lod ") >>
+        qi::lit("lod") >>
         qi::int_ [boost::phoenix::bind(&OBJState::setLevelOfDetail, m_pOBJState, qi::_1)] >>
         qi::eol;
 
     ruleTextureMapLibrary = 
-        qi::lit("maplib ") >> 
-        +(ruleName [boost::phoenix::bind(&OBJState::addTextureMapLibrary, m_pOBJState, qi::_1)] >> 
-        -(qi::omit[qi::blank])) >> 
+        qi::lit("maplib") >> 
+        +(ruleName [boost::phoenix::bind(&OBJState::addTextureMapLibrary, m_pOBJState, qi::_1)]) >> 
         qi::eol;
         
     ruleTextureMap = 
-        qi::lit("usemap ") >> 
+        qi::lit("usemap") >> 
         (qi::lit("off") [boost::phoenix::bind(&OBJState::setTextureMap, m_pOBJState, "")] |
-            ruleName [boost::phoenix::bind(&OBJState::setTextureMap, m_pOBJState, qi::_1)]) >> 
+         ruleName [boost::phoenix::bind(&OBJState::setTextureMap, m_pOBJState, qi::_1)]) >> 
         qi::eol;
 
     ruleShadowObj = 
-        qi::lit("shadow_obj ") >> 
+        qi::lit("shadow_obj") >> 
         ruleName [boost::phoenix::bind(&OBJState::setShadowObject, m_pOBJState, qi::_1)] >>
         qi::eol;
 
     ruleTraceObj = 
-        qi::lit("trace_obj ") >> 
+        qi::lit("trace_obj") >> 
         ruleName [boost::phoenix::bind(&OBJState::setTracingObject, m_pOBJState, qi::_1)] >>
         qi::eol;
         
@@ -573,8 +525,8 @@ void OBJGrammar::setupRenderStateRules()
     ruleFreeFormCurveTech =
         qi::lit("ctech") >>
         (ruleCurveParametric |
-            ruleCurveSpatial |
-            ruleCurveCurvature);
+         ruleCurveSpatial |
+         ruleCurveCurvature);
 
     // Surface Technique
 
@@ -601,9 +553,9 @@ void OBJGrammar::setupRenderStateRules()
     ruleFreeFormSurfaceTech =
         qi::lit("ctech") >>
         (ruleSurfaceParametricA |
-            ruleSurfaceParametricB |
-            ruleSurfaceSpatial |
-            ruleSurfaceCurvature);
+         ruleSurfaceParametricB |
+         ruleSurfaceSpatial |
+         ruleSurfaceCurvature);
 
     //----------------------------------------------------------------
 

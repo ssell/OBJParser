@@ -27,7 +27,7 @@ int main(int argc, char** argv)
     OBJParser parser;
     OBJState* state = parser.getOBJState();
 
-    const std::string path = "test/test.obj";
+    const std::string path = "test/hairball.obj";
 
     //--------------------------------------------------------------------
 

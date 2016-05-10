@@ -23,7 +23,7 @@
 OBJGrammarSkipper::OBJGrammarSkipper()
     : OBJGrammarSkipper::base_type(ruleSkip)
 {
-    ruleSkip = (qi::char_('#') >> *(qi::char_ - qi::eol) >> qi::eol);
+    ruleSkip = qi::blank | (qi::char_('#') >> *(qi::char_ - qi::eol) >> qi::eol);
 }
 
 //------------------------------------------------------------------------------------------
