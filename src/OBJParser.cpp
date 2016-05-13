@@ -112,8 +112,8 @@ OBJParser::Result OBJParser::parseOBJFilefstream(std::string const& path)
             Iterator first(stream);
             Iterator last;
 
-            OBJGrammar<Iterator> grammar(&m_OBJState, m_ParseFreeForm);
-            OBJCommentSkipper<Iterator> skipper;
+            OBJGrammar grammar(&m_OBJState);
+            OBJGrammarSkipper skipper;
 
             if(qi::phrase_parse(first, last, grammar, skipper))
             {
@@ -190,8 +190,8 @@ OBJParser::Result OBJParser::parseMTLFilefstream(std::string const& path)
             Iterator first(stream);
             Iterator last;
 
-            MTLGrammar<Iterator> grammar(&m_OBJState);
-            MTLGrammarSkipper<Iterator> skipper;
+            MTLGrammar grammar(&m_OBJState);
+            MTLGrammarSkipper skipper;
 
             if(qi::phrase_parse(first, last, grammar, skipper))
             {

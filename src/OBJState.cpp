@@ -46,6 +46,7 @@ void OBJState::clearState()
 
     m_ActiveGroups.clear();
     m_GroupMap.clear();
+    m_MaterialMap.clear();
     m_MaterialLibraries.clear();
     m_TextureMapLibraries.clear();
 

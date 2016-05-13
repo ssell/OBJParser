@@ -53,7 +53,7 @@ void OutputState(OBJState* state)
                   << "          # Lines: " << group->lines.size() << "\n"
                   << "          # Faces: " << group->faces.size() << std::endl;
     }
-    
+
     //--------------------------------------------------------------------
     // Print out basic material information
     //--------------------------------------------------------------------
@@ -82,14 +82,15 @@ void ParsePath(std::string const& path, OBJParser& parser)
     const auto result = parser.parseOBJFile(path);
     const auto end = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
+    const auto elapsed = end - start;
+    const double elapsedd = static_cast<double>(end - start) / static_cast<double>(1e9);
+
     if(result != OBJParser::Result::Success)
     {
-        std::cout << "... Failed!\n\nError: " <<  parser.getLastError() << std::endl;
+        std::cout << "... Failed! [elapsed " << elapsedd << " s]\n\nError: " <<  parser.getLastError() << std::endl;
     }
     else
     {
-        const auto elapsed = end - start;
-        const double elapsedd = static_cast<double>(end - start) / static_cast<double>(1e9);
 
         std::cout << "... Complete! [elapsed " << elapsedd << " s]\n" << std::endl;
 

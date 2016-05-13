@@ -107,7 +107,10 @@ void OBJGrammar::setupVertexRules()
         ruleVector3Data [boost::phoenix::bind(&OBJState::addVertexParameter, m_pOBJState, qi::_1)] >>
         qi::eol;
         
-    ruleVertices = ruleVertexSpatial | ruleVertexTexture | ruleVertexNormal;
+    ruleVertices = 
+        +(ruleVertexSpatial) |         // We check for multiple instances of a vertex in a row, as
+        +(ruleVertexTexture) |         // the most likely followup to a 'vn' is another 'vn', etc.
+        +(ruleVertexNormal);
 }
 
 void OBJGrammar::setupFaceRules()
@@ -154,7 +157,10 @@ void OBJGrammar::setupFaceRules()
         ruleIndexList [boost::phoenix::bind(&OBJState::addPointCollection, m_pOBJState, qi::_1)] >>
         qi::eol;
         
-    ruleFaces = ruleFace | ruleLine | rulePoint;
+    ruleFaces = 
+        +(ruleFace) |          // We check for multiple instances of a face in a row, as
+        +(ruleLine) |          // the most likely followup to a 'f' is another 'f', etc.
+        +(rulePoint);
 }
 
 void OBJGrammar::setupFreeFormRules()
