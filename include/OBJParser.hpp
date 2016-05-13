@@ -67,19 +67,6 @@ public:
     //--------------------------------------------------------------------
 
     /**
-     * Attempts to parse an OBJ formatted string.
-     *
-     * If successful, resulting OBJ data will be stored in the member OBJState
-     * object which may be accessed via getOBJState().
-     *
-     * If failed getLastError() may be used to for additional information.
-     *
-     * \param[in] str OBJ formatted string to parse
-     * \return 
-     */
-    Result parseOBJString(std::string const& str);
-
-    /**
      * Attempts to parse an OBJ formatted file.
      *
      * If successful, resulting OBJ data will be stored in the member OBJState
@@ -91,19 +78,6 @@ public:
      * \return 
      */
     Result parseOBJFile(std::string const& path);
-
-    /**
-     * Attempts to parse a MTL formatted file.
-     *
-     * If successful, resulting materials will be stored in the member OBJState
-     * object which may be accessed via getOBJState().
-     *
-     * If failed getLastError() may be used to for additional information.
-     *
-     * \param[in] path Relative path to the MTL file.
-     * \return 
-     */
-    Result parseMTLFile(std::string const& path);
 
     /**
      * Returns a pointer to the internal OBJState object.

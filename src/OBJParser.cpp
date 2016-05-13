@@ -43,13 +43,6 @@ OBJParser::~OBJParser()
 // Public Methods
 //------------------------------------------------------------------------------------------
 
-OBJParser::Result OBJParser::parseOBJString(std::string const& str)
-{
-    OBJParser::Result result = OBJParser::Result::Success;
-
-    return result;
-}
-
 OBJParser::Result OBJParser::parseOBJFile(std::string const& path)
 {
     OBJParser::Result result = OBJParser::Result::Success;
