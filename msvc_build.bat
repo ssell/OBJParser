@@ -19,7 +19,9 @@ set msvc=%2
 set PATHMSVC120="C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat"
 set PATHMSVC140="C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat"
 set PATHMSVC=""
-set PATHPROJECT="projects\vs2013\OBJParser.sln"
+set PATHPROJECT=""
+set PATHPROJECT120="projects\vs2013\OBJParser.sln"
+set PATHPROJECT140="projects\vs2015\OBJParser.sln"
 
  REM ---------------------------------------------------------------------
  REM Verify Architecture Parameter
@@ -41,11 +43,13 @@ goto eof
 
 if "%msvc%" == "120" (
     set PATHMSVC=!PATHMSVC120!
+    set PATHPROJECT=!PATHPROJECT120!
     goto valid_msvc
     )
 
 if "%msvc%" == "140" (
     set PATHMSVC=!PATHMSVC140!
+    set PATHPROJECT=!PATHPROJECT140!
     goto valid_msvc
     )
 

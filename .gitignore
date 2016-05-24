@@ -239,3 +239,5 @@ _Pvt_Extensions
 *.lib
 *.lib
 lib/objparser_mmap_msvc120.lib
+*.db
+projects/vs2015/OBJParser.VC.db
