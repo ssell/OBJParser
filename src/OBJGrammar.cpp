@@ -62,7 +62,7 @@ void OBJGrammar::setupDataRules()
     ruleVector4Data = qi::float_ >> qi::float_ >> qi::float_ >> -(qi::float_) >> *(qi::char_ - qi::eol);
 
     ruleIndexValue = qi::int_ | qi::attr(0);
-    ruleVertexGroupData = ruleIndexValue >> -qi::omit[qi::char_('/')] >> ruleIndexValue >> -qi::omit[qi::char_('/')] >> ruleIndexValue;
+    ruleVertexGroupData = ruleIndexValue >> -(qi::omit[qi::char_('/')] >> ruleIndexValue >> -(qi::omit[qi::char_('/')] >> ruleIndexValue));
     ruleIndexList = +(ruleVertexGroupData);
 
     ruleName = qi::lexeme[+(qi::graph)];
