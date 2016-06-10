@@ -67,7 +67,12 @@ struct OBJCurveTechnique
 struct OBJSurfaceTechnique
 {
     OBJSurfaceTechnique()
-        : technique(OBJSubdivision::None)
+        : technique(OBJSubdivision::None),
+          resU(0.0f),
+          resV(0.0f),
+          maxLength(0.0f),
+          maxDistance(0.0f),
+          maxAngle(0.0f)
     {
 
     }
