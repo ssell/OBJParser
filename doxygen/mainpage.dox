@@ -1,0 +1,20 @@
+/**
+ * \mainpage OBJParser API Documentation
+ *
+ * Use of the OBJParser library revolves around two primary classes: OBJParser and OBJState. 
+ *
+ * OBJParser class is envoked to perform the OBJ file parsing, and all results are stored within the internal OBJState object which may be retrieved.
+ *
+ *     OBJParser parser;
+ *
+ *     if(parser.parseOBJFile("test.obj") == OBJParser::Result::Success)
+ *     {
+ *         auto state = parser.getOBJState();
+ *         
+ *         const auto numSpatialVertices = state->getSpatialData()->size();
+ *
+ *         std::cout << "OBJ file contains " << numSpatialVertices << " spatial points." << std::endl;
+ *     }
+ *
+ * Additional information about the library may be found at: http://www.vertexfragment.com/objparser/index.html
+ */
