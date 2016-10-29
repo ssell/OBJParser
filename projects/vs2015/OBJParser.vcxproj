@@ -121,7 +121,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>$(SolutionDir)..\..\bin\msvc140\Debug\x86\</OutDir>
+    <OutDir>$(SolutionDir)..\..\bin\msvc140\x86\</OutDir>
     <IntDir>$(SolutionDir)..\..\obj\msvc140\Debug\x86\</IntDir>
     <TargetExt>.lib</TargetExt>
     <TargetName>objparser_msvc140d</TargetName>
@@ -129,11 +129,11 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <TargetExt>.lib</TargetExt>
     <TargetName>objparser_msvc140d</TargetName>
-    <OutDir>$(SolutionDir)..\..\bin\msvc140\Debug\x64\</OutDir>
+    <OutDir>$(SolutionDir)..\..\bin\msvc140\x64\</OutDir>
     <IntDir>$(SolutionDir)..\..\obj\msvc140\Debug\x64\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugMemMap|Win32'">
-    <OutDir>$(SolutionDir)..\..\bin\msvc140\Debug\x86\</OutDir>
+    <OutDir>$(SolutionDir)..\..\bin\msvc140\x86\</OutDir>
     <IntDir>$(SolutionDir)..\..\obj\msvc140\Debug\x86\</IntDir>
     <TargetExt>.lib</TargetExt>
     <TargetName>objparser_mmap_msvc140d</TargetName>
@@ -141,11 +141,11 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugMemMap|x64'">
     <TargetExt>.lib</TargetExt>
     <TargetName>objparser_mmap_msvc140d</TargetName>
-    <OutDir>$(SolutionDir)..\..\bin\msvc140\Debug\x64\</OutDir>
+    <OutDir>$(SolutionDir)..\..\bin\msvc140\x64\</OutDir>
     <IntDir>$(SolutionDir)..\..\obj\msvc140\Debug\x64\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(SolutionDir)..\..\bin\msvc140\Release\x86\</OutDir>
+    <OutDir>$(SolutionDir)..\..\bin\msvc140\x86\</OutDir>
     <IntDir>$(SolutionDir)..\..\obj\msvc140\Release\x86\</IntDir>
     <TargetName>objparser_msvc140</TargetName>
     <TargetExt>.lib</TargetExt>
@@ -153,11 +153,11 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <TargetName>objparser_msvc140</TargetName>
     <TargetExt>.lib</TargetExt>
-    <OutDir>$(SolutionDir)..\..\bin\msvc140\Release\x64\</OutDir>
+    <OutDir>$(SolutionDir)..\..\bin\msvc140\x64\</OutDir>
     <IntDir>$(SolutionDir)..\..\obj\msvc140\Release\x64\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseMemMap|Win32'">
-    <OutDir>$(SolutionDir)..\..\bin\msvc140\Release\x86\</OutDir>
+    <OutDir>$(SolutionDir)..\..\bin\msvc140\x86\</OutDir>
     <IntDir>$(SolutionDir)..\..\obj\msvc140\Release\x86\</IntDir>
     <TargetName>objparser_mmap_msvc140</TargetName>
     <TargetExt>.lib</TargetExt>
@@ -165,15 +165,17 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseMemMap|x64'">
     <TargetName>objparser_mmap_msvc140</TargetName>
     <TargetExt>.lib</TargetExt>
-    <OutDir>$(SolutionDir)..\..\bin\msvc140\Release\x64\</OutDir>
+    <OutDir>$(SolutionDir)..\..\bin\msvc140\x64\</OutDir>
     <IntDir>$(SolutionDir)..\..\obj\msvc140\Release\x64\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <Optimization>Disabled</Optimization>
+      <Optimization>Full</Optimization>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(BOOST_DIR);$(ProjectDir)..\..\include</AdditionalIncludeDirectories>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <DebugInformationFormat>None</DebugInformationFormat>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -185,9 +187,11 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <Optimization>Disabled</Optimization>
+      <Optimization>Full</Optimization>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(BOOST_DIR);$(ProjectDir)..\..\include</AdditionalIncludeDirectories>
+      <DebugInformationFormat>None</DebugInformationFormat>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -198,10 +202,12 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugMemMap|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <Optimization>Disabled</Optimization>
+      <Optimization>Full</Optimization>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(BOOST_DIR);$(ProjectDir)..\..\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>OBJ_PARSER_USE_MEM_MAP;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <DebugInformationFormat>None</DebugInformationFormat>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -212,10 +218,12 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugMemMap|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <Optimization>Disabled</Optimization>
+      <Optimization>Full</Optimization>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(BOOST_DIR);$(ProjectDir)..\..\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>OBJ_PARSER_USE_MEM_MAP;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <DebugInformationFormat>None</DebugInformationFormat>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -226,7 +234,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <Optimization>MaxSpeed</Optimization>
+      <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
@@ -246,7 +254,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <Optimization>MaxSpeed</Optimization>
+      <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
@@ -285,7 +293,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseMemMap|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <Optimization>MaxSpeed</Optimization>
+      <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>

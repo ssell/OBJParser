@@ -7,11 +7,11 @@ setlocal enabledelayedexpansion
  REM Takes in two parameters:
  REM
  REM     arch: Architecture type. Valid values: x86 or x64
- REM     msvc: Visual studio version. Value values: msvc120 or msvc140
+ REM     msvc: Visual studio version. Value values: 120 or 140
  REM
  REM Example usage:
  REM
- REM     > msvc120_build.bat x86 msvc120
+ REM     > msvc_build.bat x86 120
 
 set arch=%1
 set msvc=%2
